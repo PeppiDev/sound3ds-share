@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sound3DS Share</title>
+<style>
+:root {
+  --bg: #120a22; --bg2: #1a1030; --panel: #1f1438; --panel2: #2a1b4a; --line: #3a2766;
+  --accent: #be6eff; --accent2: #9a4ee8; --cyan: #46dce6; --ok: #50d680; --warn: #ffb848; --err: #ff6070;
+  --text: #f6f0ff; --dim: #a99acb; --faint: #6f5f96; --radius: 14px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+  font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif; }
+body { display: flex; flex-direction: column; overflow: hidden; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; border: 0; background: none; }
+input[type=text], input[type=number], select {
+  background: var(--bg2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; outline: none; min-width: 0; }
+input[type=text]:focus, input[type=number]:focus, select:focus { border-color: var(--accent); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 10px; border: 2px solid var(--panel); }
+svg { flex: none; }
+
+/* Barra superior */
+header { display: flex; align-items: center; gap: 14px; padding: 12px 18px; background: linear-gradient(90deg, #2c1656, #1f1240);
+  border-bottom: 1px solid var(--line); }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; letter-spacing: .2px; }
+.logo .cube { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); display: grid; place-items: center;
+  box-shadow: inset -6px -6px 0 rgba(0,0,0,.18); }
+.logo small { color: var(--dim); font-weight: 400; font-size: 12px; margin-left: 2px; }
+.spacer { flex: 1; }
+.service { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,.25); border: 1px solid var(--line);
+  border-radius: 999px; padding: 5px 8px 5px 14px; }
+.service .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--faint); }
+.service.on .dot { background: var(--ok); box-shadow: 0 0 0 4px rgba(80,214,128,.18); }
+.service .label { font-size: 13px; color: var(--dim); }
+.service.on .label { color: var(--text); }
+.service select { padding: 3px 6px; font-size: 12px; border-radius: 6px; }
+.switch { width: 44px; height: 24px; border-radius: 99px; background: var(--line); position: relative; transition: .2s; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: .2s; }
+.switch.on { background: var(--ok); }
+.switch.on::after { left: 23px; }
+.iconbtn { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: var(--dim); }
+.iconbtn:hover { background: rgba(255,255,255,.08); color: var(--text); }
+.lang { font-size: 12px; font-weight: 700; color: var(--dim); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; }
+.lang:hover { color: var(--text); border-color: var(--accent); }
+
+main { flex: 1; display: grid; grid-template-columns: minmax(340px, 42%) 1fr; gap: 14px; padding: 14px; min-height: 0; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); display: flex; flex-direction: column; min-height: 0; }
+.panel > h2 { margin: 0; padding: 14px 16px 10px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.panel > h2 .count { color: var(--dim); font-weight: 400; font-size: 13px; }
+
+/* Explorador */
+.places { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 10px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 99px; background: var(--panel2);
+  color: var(--dim); font-size: 12.5px; }
+.chip:hover { color: var(--text); background: var(--line); }
+.pathbar { display: flex; align-items: center; gap: 6px; padding: 0 12px 8px 16px; }
+.crumbs { flex: 1; display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 2px; align-items: center; scrollbar-width: none; }
+.crumbs::-webkit-scrollbar { display: none; }
+.crumb { padding: 4px 6px; border-radius: 6px; color: var(--dim); white-space: nowrap; }
+.crumb:hover { background: var(--panel2); color: var(--text); }
+.crumb:last-child { color: var(--text); font-weight: 600; }
+.sep { color: var(--faint); }
+.filter { margin: 0 16px 8px; position: relative; }
+.filter input { width: 100%; padding-left: 32px; }
+.filter svg { position: absolute; left: 10px; top: 9px; color: var(--faint); }
+.files { flex: 1; overflow-y: auto; padding: 0 8px 8px; }
+.row { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 9px; cursor: pointer; user-select: none; }
+.row:hover { background: rgba(255,255,255,.05); }
+.row.sel { background: rgba(190,110,255,.16); }
+.row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .meta { color: var(--faint); font-size: 12px; white-space: nowrap; }
+.row .addall { opacity: 0; font-size: 12px; color: var(--accent); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--accent2); }
+.row:hover .addall { opacity: 1; }
+.row .addall:hover { background: var(--accent2); color: #fff; }
+.row.added { opacity: .5; }
+.check { width: 18px; height: 18px; border-radius: 5px; border: 2px solid var(--faint); display: grid; place-items: center; flex: none; }
+.row.sel .check { background: var(--accent); border-color: var(--accent); }
+.row.sel .check::after { content: ""; width: 9px; height: 5px; border: solid #fff; border-width: 0 0 2px 2px; transform: rotate(-45deg) translate(1px,-1px); }
+.empty { color: var(--faint); text-align: center; padding: 40px 20px; }
+.panel-foot { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--line); }
+.panel-foot .info { flex: 1; color: var(--dim); font-size: 13px; }
+.btn { padding: 9px 16px; border-radius: 10px; background: var(--panel2); font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+.btn:hover { background: var(--line); }
+.btn.primary { background: var(--accent); color: #1c0b33; }
+.btn.primary:hover { background: #cf8dff; }
+.btn:disabled { opacity: .4; cursor: default; }
+.btn.big { padding: 12px 22px; font-size: 15px; border-radius: 12px; }
+
+/* Lista para enviar */
+.albums { flex: 1; overflow-y: auto; padding: 4px 14px 14px; display: flex; flex-direction: column; gap: 12px; }
+.album { flex: none; background: var(--bg2); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.album-head { display: flex; gap: 14px; padding: 12px; align-items: flex-start; }
+.cover { width: 92px; height: 92px; border-radius: 10px; flex: none; position: relative; overflow: hidden; cursor: pointer;
+  background: linear-gradient(135deg, #3b2370, #22143f); display: grid; place-items: center; color: var(--faint); }
+.cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cover .over { position: absolute; inset: 0; background: rgba(18,10,34,.72); display: grid; place-items: center; text-align: center;
+  font-size: 11.5px; font-weight: 600; opacity: 0; transition: .15s; padding: 6px; }
+.cover:hover .over { opacity: 1; }
+.cover.missing { outline: 2px dashed var(--warn); outline-offset: -2px; color: var(--warn); }
+.album-fields { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; min-width: 0; }
+.album-fields label { font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: .5px; }
+.album-fields input { width: 100%; }
+.album-fields .title-in { font-weight: 700; font-size: 15px; }
+.badges { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.badge { font-size: 11.5px; padding: 2px 8px; border-radius: 99px; background: var(--panel2); color: var(--dim); }
+.badge { border: 0; }
+button.badge:hover { filter: brightness(1.25); }
+.badge.warn { background: rgba(255,184,72,.15); color: var(--warn); }
+.badge.ok { background: rgba(80,214,128,.13); color: var(--ok); }
+.album-x { color: var(--faint); }
+.songs { border-top: 1px solid var(--line); }
+.song { display: grid; grid-template-columns: 52px 1fr 1fr 150px 30px; gap: 6px; align-items: center; padding: 5px 12px; }
+.song:nth-child(even) { background: rgba(255,255,255,.02); }
+.song input, .song select { width: 100%; padding: 4px 7px; font-size: 13px; background: transparent; border-color: transparent; }
+.song input:hover, .song select:hover { border-color: var(--line); }
+.song input:focus { background: var(--bg); }
+.song .num { text-align: center; }
+.song .rm { color: var(--faint); width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; }
+.song .rm:hover { color: var(--err); background: rgba(255,96,112,.12); }
+.songs-head { color: var(--faint); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; padding-top: 7px; }
+.placeholder { flex: 1; display: grid; place-items: center; text-align: center; color: var(--faint); padding: 30px; }
+.placeholder h3 { color: var(--dim); margin: 14px 0 6px; font-size: 16px; }
+
+/* Modal del QR */
+.modal { position: fixed; inset: 0; background: rgba(8,4,16,.72); display: none; place-items: center; z-index: 10; backdrop-filter: blur(3px); }
+.modal.show { display: grid; }
+.sheet { width: min(920px, 94vw); max-height: 90vh; background: var(--panel); border: 1px solid var(--line); border-radius: 18px;
+  display: grid; grid-template-columns: 330px 1fr; overflow: hidden; }
+.qrside { background: linear-gradient(160deg, #3a1d70, #1f1240); padding: 26px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.qrbox { background: #fff; border-radius: 14px; padding: 12px; width: 270px; height: 270px; }
+.qrbox svg { width: 100%; height: 100%; display: block; }
+.url { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; color: var(--dim); word-break: break-all; text-align: center; }
+.steps { padding: 24px 26px; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.steps h2 { margin: 0; font-size: 19px; }
+.status { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--bg2); color: var(--dim); }
+.status.ok { color: var(--ok); }
+.pulse { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); animation: pulse 1.4s infinite; flex: none; }
+.status.ok .pulse { background: var(--ok); animation: none; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(190,110,255,.6); } 100% { box-shadow: 0 0 0 12px rgba(190,110,255,0); } }
+.howto { margin: 0; padding-left: 20px; color: var(--dim); }
+.howto li { margin: 3px 0; }
+.howto b { color: var(--text); }
+.progress-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; min-height: 80px; max-height: 300px; }
+.prog { display: grid; grid-template-columns: 22px 1fr 70px; gap: 8px; align-items: center; font-size: 13px; }
+.prog .bar { grid-column: 2 / 4; height: 4px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.prog .bar i { display: block; height: 100%; background: var(--cyan); }
+.prog.done .bar i { background: var(--ok); }
+.prog .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prog .pct { text-align: right; color: var(--faint); font-size: 12px; }
+.sheet-foot { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+.hint { font-size: 12px; color: var(--faint); }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--panel2); border: 1px solid var(--line);
+  padding: 10px 16px; border-radius: 10px; opacity: 0; transition: .2s; pointer-events: none; z-index: 20; }
+.toast.show { opacity: 1; }
+.spin { width: 16px; height: 16px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 980px) { main { grid-template-columns: 1fr; } .sheet { grid-template-columns: 1fr; } .song { grid-template-columns: 44px 1fr 1fr 30px; } .song .mv { display: none; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="cube"><svg width="16" height="16" viewBox="0 0 24 24" fill="#1c0b33"><path d="M9 18a3 3 0 1 1-2-2.83V5l11-2v11.5a3 3 0 1 1-2-2.83V6.4l-7 1.27V18z"/></svg></div>
+    Sound3DS Share <small id="ver"></small>
+  </div>
+  <div class="spacer"></div>
+  <div class="service" id="service">
+    <span class="dot"></span>
+    <span class="label" id="svcLabel"></span>
+    <select id="ipSel" title=""></select>
+    <button class="switch" id="svcSwitch" aria-label="service"></button>
+  </div>
+  <button class="lang" id="langBtn">EN</button>
+  <button class="iconbtn" id="quitBtn" data-t-title="quit"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v9M6.3 6.3a8 8 0 1 0 11.4 0"/></svg></button>
+</header>
+
+<main>
+  <section class="panel">
+    <h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span data-t="files"></span></h2>
+    <div class="places" id="places"></div>
+    <div class="pathbar">
+      <button class="iconbtn" id="upBtn" data-t-title="up"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+      <div class="crumbs" id="crumbs"></div>
+    </div>
+    <div class="filter">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <input type="text" id="filter" data-t-ph="filter">
+    </div>
+    <div class="files" id="files"></div>
+    <div class="panel-foot">
+      <div class="info" id="selInfo"></div>
+      <button class="btn" id="selAllBtn" data-t="selectAll"></button>
+      <button class="btn primary" id="addBtn" disabled><span data-t="add"></span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--accent)"><path d="M9 18a3 3 0 1 1-2-2.83V5l11-2v11.5a3 3 0 1 1-2-2.83V6.4l-7 1.27V18z"/></svg>
+      <span data-t="toSend"></span> <span class="count" id="sendCount"></span>
+      <span class="spacer"></span>
+      <button class="chip" id="clearBtn" data-t="clear"></button></h2>
+    <div class="albums" id="albums"></div>
+    <div class="panel-foot">
+      <div class="info" id="sendInfo"></div>
+      <button class="btn primary big" id="qrBtn" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3zm2 2v4h4V5zm8-2h8v8h-8zm2 2v4h4V5zM3 13h8v8H3zm2 2v4h4v-4zm8-2h3v3h-3zm5 0h3v3h-3zm-5 5h3v3h-3zm5 0h3v3h-3z"/></svg>
+        <span data-t="makeQr"></span></button>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <div class="qrside">
+      <div class="qrbox" id="qrBox"></div>
+      <div class="url" id="qrUrl"></div>
+      <div class="hint" data-t="sameWifi" style="text-align:center"></div>
+    </div>
+    <div class="steps">
+      <h2 data-t="scanTitle"></h2>
+      <ol class="howto">
+        <li data-t-html="step1"></li>
+        <li data-t-html="step2"></li>
+        <li data-t-html="step3"></li>
+      </ol>
+      <div class="status" id="qrStatus"><span class="pulse"></span><span id="qrStatusText"></span></div>
+      <div class="progress-list" id="progList"></div>
+      <div class="hint" data-t="firewall"></div>
+      <div class="sheet-foot">
+        <button class="btn" id="stopBtn" data-t="stopService"></button>
+        <button class="btn primary" id="closeModal" data-t="keepAdding"></button>
+      </div>
+    </div>
+  </div>
+</div>
+<input type="file" id="coverInput" accept="image/*" hidden>
+<div class="toast" id="toast"></div>
+
+<script>
+const I18N = {
+  es: {
+    files: "Tus archivos", up: "Subir", filter: "Filtrar en esta carpeta", selectAll: "Seleccionar todo",
+    add: "Agregar", toSend: "Para enviar", clear: "Vaciar", makeQr: "Generar QR", quit: "Cerrar",
+    home: "Inicio", music: "Música", downloads: "Descargas", desktop: "Escritorio", root: "Sistema",
+    addFolder: "+ carpeta", selected: n => `${n} seleccionada${n == 1 ? "" : "s"}`,
+    noAudio: "No hay canciones .mp3 ni .aac en esta carpeta", readError: "No se puede abrir esta carpeta",
+    emptyTitle: "Elige canciones a la izquierda",
+    emptyText: "Se agrupan por álbum con su carátula y etiquetas.<br>Puedes corregir lo que falte antes de generar el QR.",
+    songs: n => `${n} canción${n == 1 ? "" : "es"}`, album: "Álbum", albumArtist: "Artista del álbum",
+    noAlbum: "Sin álbum", noAlbumPh: "Sin álbum: escribe un nombre", changeCover: "Cambiar portada", pickCover: "Elegir portada",
+    coverEmbedded: "Portada incrustada", coverFolder: "Portada de la carpeta", coverCustom: "Portada elegida",
+    coverMissing: "Sin portada", coverMixed: "Portadas distintas", unify: "Usar la portada principal en todas las canciones del álbum", unifyShort: "unificar", noAlbumBadge: "Sin nombre de álbum",
+    colTrack: "#", colTitle: "Título", colArtist: "Artista", colAlbum: "Mover a",
+    newAlbum: "Nuevo álbum…", newAlbumPrompt: "Nombre del nuevo álbum", remove: "Quitar",
+    on: "Servicio encendido", off: "Servicio apagado", portError: "No se pudo abrir el puerto",
+    scanTitle: "Escanéalo con la consola",
+    step1: "Abre <b>Sound3DS QR</b> en la 3DS o 2DS.",
+    step2: "Apunta la cámara a este código.",
+    step3: "Las canciones quedan en <b>Sound3DS &gt; Local</b>, cada una en su álbum.",
+    waiting: "Esperando a la consola…", connected: "La consola está descargando",
+    finished: n => `Listo: ${n} canción${n == 1 ? "" : "es"} enviada${n == 1 ? "" : "s"}`,
+    sameWifi: "La consola y este PC deben estar en la misma red Wi-Fi.",
+    firewall: "Si la consola no conecta, permite la app en el firewall de este equipo.",
+    stopService: "Detener servicio", keepAdding: "Seguir agregando",
+    added: n => `${n} canción${n == 1 ? "" : "es"} agregada${n == 1 ? "" : "s"}`, already: "Ya estaban en la lista",
+    limited: "Solo se agregaron las primeras 1000", reading: "Leyendo etiquetas…", badImage: "No se pudo leer esa imagen",
+    total: (n, mb) => `${n} canción${n == 1 ? "" : "es"} · ${mb}`, closed: "Sound3DS Share se cerró. Puedes cerrar esta ventana.",
+    confirmQuit: "La consola todavía está descargando. ¿Cerrar igual?",
+  },
+  en: {
+    files: "Your files", up: "Up", filter: "Filter this folder", selectAll: "Select all",
+    add: "Add", toSend: "To send", clear: "Clear", makeQr: "Generate QR", quit: "Close",
+    home: "Home", music: "Music", downloads: "Downloads", desktop: "Desktop", root: "System",
+    addFolder: "+ folder", selected: n => `${n} selected`,
+    noAudio: "No .mp3 or .aac songs in this folder", readError: "Can't open this folder",
+    emptyTitle: "Pick songs on the left",
+    emptyText: "They're grouped by album with their cover and tags.<br>You can fix anything missing before generating the QR.",
+    songs: n => `${n} song${n == 1 ? "" : "s"}`, album: "Album", albumArtist: "Album artist",
+    noAlbum: "No album", noAlbumPh: "No album: type a name", changeCover: "Change cover", pickCover: "Choose cover",
+    coverEmbedded: "Embedded cover", coverFolder: "Cover from folder", coverCustom: "Chosen cover",
+    coverMissing: "No cover", coverMixed: "Mixed covers", unify: "Use the main cover for every song in the album", unifyShort: "unify", noAlbumBadge: "No album name",
+    colTrack: "#", colTitle: "Title", colArtist: "Artist", colAlbum: "Move to",
+    newAlbum: "New album…", newAlbumPrompt: "New album name", remove: "Remove",
+    on: "Service on", off: "Service off", portError: "Couldn't open the port",
+    scanTitle: "Scan it with your console",
+    step1: "Open <b>Sound3DS QR</b> on your 3DS or 2DS.",
+    step2: "Point the camera at this code.",
+    step3: "Songs show up in <b>Sound3DS &gt; Local</b>, each in its album.",
+    waiting: "Waiting for the console…", connected: "The console is downloading",
+    finished: n => `Done: ${n} song${n == 1 ? "" : "s"} sent`,
+    sameWifi: "The console and this PC must be on the same Wi-Fi network.",
+    firewall: "If the console can't connect, allow the app in this computer's firewall.",
+    stopService: "Stop service", keepAdding: "Keep adding",
+    added: n => `${n} song${n == 1 ? "" : "s"} added`, already: "Already in the list",
+    limited: "Only the first 1000 were added", reading: "Reading tags…", badImage: "Couldn't read that image",
+    total: (n, mb) => `${n} song${n == 1 ? "" : "s"} · ${mb}`, closed: "Sound3DS Share has closed. You can close this window.",
+    confirmQuit: "The console is still downloading. Close anyway?",
+  },
+};
+let lang = localStorage.getItem("lang") || ((navigator.language || "en").startsWith("es") ? "es" : "en");
+const t = (k, ...a) => { const v = I18N[lang][k]; return typeof v === "function" ? v(...a) : (v ?? k); };
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmtSize = b => b >= 1048576 ? (b / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB";
+const api = async (path, opts = {}) => {
+  const r = await fetch(path, opts);
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+};
+const post = (path, body) => api(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+
+// Estado
+let cwd = "", listing = null, selected = new Set(), songs = [], state = null, modalOpen = false, coverTarget = null;
+try { songs = JSON.parse(sessionStorage.getItem("songs") || "[]"); } catch { songs = []; }
+const save = () => sessionStorage.setItem("songs", JSON.stringify(songs));
+const albumKey = s => (s.album || "").trim().toLowerCase();
+
+function toast(msg) {
+  const el = $("#toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toast.h);
+  toast.h = setTimeout(() => el.classList.remove("show"), 2400);
+}
+
+function applyI18n() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-t]").forEach(el => el.textContent = t(el.dataset.t));
+  document.querySelectorAll("[data-t-html]").forEach(el => el.innerHTML = t(el.dataset.tHtml));
+  document.querySelectorAll("[data-t-ph]").forEach(el => el.placeholder = t(el.dataset.tPh));
+  document.querySelectorAll("[data-t-title]").forEach(el => el.title = t(el.dataset.tTitle));
+  $("#langBtn").textContent = lang === "es" ? "EN" : "ES";
+}
+
+// ---------------------------------------------------------------- Explorador
+const ICON_DIR = '<svg width="18" height="18" viewBox="0 0 24 24" fill="#8f73c9"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+const ICON_NOTE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="var(--cyan)"><path d="M9 18a3 3 0 1 1-2-2.83V5l11-2v11.5a3 3 0 1 1-2-2.83V6.4l-7 1.27V18z"/></svg>';
+
+async function loadPlaces() {
+  const d = await api("/api/places");
+  $("#places").innerHTML = d.places.map(p =>
+    `<button class="chip" data-path="${esc(p.path)}">${esc(p.label || t(p.id))}</button>`).join("");
+  $("#places").onclick = e => { const b = e.target.closest(".chip"); if (b) openDir(b.dataset.path); };
+  const music = d.places.find(p => p.id === "music");
+  return sessionStorage.getItem("cwd") || (music ? music.path : d.home);
+}
+
+async function openDir(path) {
+  listing = await api("/api/list?path=" + encodeURIComponent(path));
+  cwd = listing.path;
+  sessionStorage.setItem("cwd", cwd);
+  selected.clear();
+  $("#filter").value = "";
+  renderCrumbs();
+  renderFiles();
+}
+
+function renderCrumbs() {
+  const sep = listing.sep || "/";
+  const parts = cwd.split(/[\\/]/).filter(Boolean);
+  let acc = cwd.startsWith("/") ? "/" : "";
+  const crumbs = [];
+  if (cwd.startsWith("/")) crumbs.push(`<button class="crumb" data-path="/">/</button>`);
+  parts.forEach((p, i) => {
+    acc = i === 0 && !cwd.startsWith("/") ? p + sep : (acc.endsWith(sep) ? acc : acc + sep) + p;
+    if (i > 0 || cwd.startsWith("/")) crumbs.push('<span class="sep">›</span>');
+    crumbs.push(`<button class="crumb" data-path="${esc(acc)}">${esc(p)}</button>`);
+  });
+  $("#crumbs").innerHTML = crumbs.join("");
+  $("#crumbs").scrollLeft = 1e6;
+  $("#upBtn").disabled = !listing.parent;
+}
+
+function renderFiles() {
+  const f = $("#filter").value.trim().toLowerCase();
+  const inList = new Set(songs.map(s => s.path));
+  const entries = listing.entries.filter(e => !f || e.name.toLowerCase().includes(f));
+  if (listing.error) {
+    $("#files").innerHTML = `<div class="empty">${t("readError")}</div>`;
+  } else if (!entries.length) {
+    $("#files").innerHTML = `<div class="empty">${t("noAudio")}</div>`;
+  } else {
+    $("#files").innerHTML = entries.map(e => e.type === "dir"
+      ? `<div class="row" data-dir="${esc(e.path)}">${ICON_DIR}<span class="name">${esc(e.name)}</span>
+           <button class="addall" data-addall="${esc(e.path)}">${t("addFolder")}</button></div>`
+      : `<div class="row ${selected.has(e.path) ? "sel" : ""} ${inList.has(e.path) ? "added" : ""}" data-file="${esc(e.path)}">
+           <span class="check"></span>${ICON_NOTE}<span class="name">${esc(e.name)}</span><span class="meta">${fmtSize(e.size)}</span></div>`
+    ).join("");
+  }
+  updateSelInfo();
+}
+
+function updateSelInfo() {
+  $("#selInfo").textContent = selected.size ? t("selected", selected.size) : "";
+  $("#addBtn").disabled = !selected.size;
+}
+
+$("#files").addEventListener("click", e => {
+  const add = e.target.closest("[data-addall]");
+  if (add) { e.stopPropagation(); addPaths([add.dataset.addall]); return; }
+  const row = e.target.closest(".row");
+  if (!row) return;
+  if (row.dataset.dir) { openDir(row.dataset.dir); return; }
+  const p = row.dataset.file;
+  selected.has(p) ? selected.delete(p) : selected.add(p);
+  row.classList.toggle("sel");
+  updateSelInfo();
+});
+$("#files").addEventListener("dblclick", e => {
+  const row = e.target.closest(".row[data-file]");
+  if (row) { selected.add(row.dataset.file); addPaths([...selected]); }
+});
+$("#crumbs").onclick = e => { const b = e.target.closest(".crumb"); if (b) openDir(b.dataset.path); };
+$("#upBtn").onclick = () => listing.parent && openDir(listing.parent);
+$("#filter").oninput = renderFiles;
+$("#selAllBtn").onclick = () => {
+  const f = $("#filter").value.trim().toLowerCase();
+  const files = listing.entries.filter(e => e.type === "audio" && (!f || e.name.toLowerCase().includes(f)));
+  const all = files.every(e => selected.has(e.path));
+  files.forEach(e => all ? selected.delete(e.path) : selected.add(e.path));
+  renderFiles();
+};
+$("#addBtn").onclick = () => addPaths([...selected]);
+
+async function addPaths(paths) {
+  if (!paths.length) return;
+  $("#addBtn").disabled = true;
+  toast(t("reading"));
+  try {
+    const d = await post("/api/add", { paths });
+    const have = new Set(songs.map(s => s.path));
+    const fresh = d.songs.filter(s => !have.has(s.path));
+    songs.push(...fresh);
+    save();
+    selected.clear();
+    toast(fresh.length ? t("added", fresh.length) + (d.limited ? " · " + t("limited") : "") : t("already"));
+  } catch { toast(t("readError")); }
+  renderFiles();
+  renderAlbums();
+}
+
+// ---------------------------------------------------------------- Álbumes
+function groups() {
+  const map = new Map();
+  for (const s of songs) {
+    const k = albumKey(s);
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push(s);
+  }
+  const list = [...map.entries()].map(([key, items]) => {
+    items.sort((a, b) => (a.track || 999) - (b.track || 999) || a.title.localeCompare(b.title));
+    return { key, items };
+  });
+  // Los álbumes con nombre primero, "Sin álbum" al final
+  list.sort((a, b) => (a.key === "") - (b.key === "") || a.key.localeCompare(b.key));
+  return list;
+}
+
+function mostCommon(arr) {
+  const c = new Map();
+  arr.forEach(v => v && c.set(v, (c.get(v) || 0) + 1));
+  let best = "", n = 0;
+  c.forEach((k, v) => { if (k > n) { best = v; n = k; } });
+  return best;
+}
+
+function renderAlbums() {
+  const gs = groups();
+  const total = songs.reduce((a, s) => a + (s.size || 0), 0);
+  $("#sendCount").textContent = songs.length ? "· " + t("songs", songs.length) : "";
+  $("#sendInfo").textContent = songs.length ? t("total", songs.length, fmtSize(total)) : "";
+  $("#qrBtn").disabled = !songs.length;
+  $("#clearBtn").style.visibility = songs.length ? "visible" : "hidden";
+  if (!songs.length) {
+    $("#albums").innerHTML = `<div class="placeholder"><div>
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="var(--line)"><path d="M9 18a3 3 0 1 1-2-2.83V5l11-2v11.5a3 3 0 1 1-2-2.83V6.4l-7 1.27V18z"/></svg>
+      <h3>${t("emptyTitle")}</h3><div>${t("emptyText")}</div></div></div>`;
+    return;
+  }
+  const names = gs.filter(g => g.key).map(g => g.items[0].album);
+  $("#albums").innerHTML = gs.map(g => {
+    const album = g.key ? g.items[0].album : "";
+    const aartist = mostCommon(g.items.map(s => s.album_artist)) || mostCommon(g.items.map(s => s.artist));
+    const covers = [...new Set(g.items.map(s => s.cover).filter(Boolean))];
+    const cover = mostCommon(g.items.map(s => s.cover));
+    const missing = g.items.some(s => !s.cover);
+    const src = mostCommon(g.items.map(s => s.cover_src));
+    const badges = [`<span class="badge">${t("songs", g.items.length)}</span>`];
+    if (!cover) badges.push(`<span class="badge warn">${t("coverMissing")}</span>`);
+    else if (missing || covers.length > 1) badges.push(`<button class="badge warn" data-unify="${esc(g.key)}" title="${t("unify")}">${t(missing ? "coverMissing" : "coverMixed")} · ${t("unifyShort")}</button>`);
+    else badges.push(`<span class="badge ok">${t(src === "folder" ? "coverFolder" : src === "custom" ? "coverCustom" : "coverEmbedded")}</span>`);
+    if (!g.key) badges.push(`<span class="badge warn">${t("noAlbumBadge")}</span>`);
+    const opts = s => `<option value="" disabled selected>${t("colAlbum")}…</option>` +
+      names.filter(n => n.toLowerCase() !== albumKey(s)).map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("") +
+      (g.key ? `<option value="__none">${t("noAlbum")}</option>` : "") + `<option value="__new">${t("newAlbum")}</option>`;
+    return `<div class="album" data-key="${esc(g.key)}">
+      <div class="album-head">
+        <div class="cover ${cover ? "" : "missing"}" data-cover="${esc(g.key)}" title="${t(cover ? "changeCover" : "pickCover")}">
+          ${cover ? `<img src="/api/cover/${cover}" alt="">` : '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>'}
+          <div class="over">${t(cover ? "changeCover" : "pickCover")}</div>
+        </div>
+        <div class="album-fields">
+          <div><label>${t("album")}</label><input type="text" class="title-in" data-afield="album" value="${esc(album)}" placeholder="${t("noAlbumPh")}"></div>
+          <div><label>${t("albumArtist")}</label><input type="text" data-afield="album_artist" value="${esc(aartist)}"></div>
+          <div class="badges">${badges.join("")}</div>
+        </div>
+      </div>
+      <div class="songs">
+        <div class="song songs-head"><span style="text-align:center">${t("colTrack")}</span><span>${t("colTitle")}</span><span>${t("colArtist")}</span><span class="mv"></span><span></span></div>
+        ${g.items.map(s => `<div class="song" data-path="${esc(s.path)}">
+          <input type="number" min="0" max="999" class="num" data-field="track" value="${s.track || ""}">
+          <input type="text" data-field="title" value="${esc(s.title)}">
+          <input type="text" data-field="artist" value="${esc(s.artist)}">
+          <select class="mv" data-move>${opts(s)}</select>
+          <button class="rm" data-rm title="${t("remove")}"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>`).join("")}
+      </div></div>`;
+  }).join("");
+}
+
+const songByPath = p => songs.find(s => s.path === p);
+const groupSongs = key => songs.filter(s => albumKey(s) === key);
+
+$("#albums").addEventListener("change", e => {
+  const el = e.target;
+  const songRow = el.closest(".song[data-path]");
+  const albumEl = el.closest(".album");
+  if (el.dataset.field && songRow) {
+    const s = songByPath(songRow.dataset.path);
+    s[el.dataset.field] = el.dataset.field === "track" ? (parseInt(el.value) || 0) : el.value.trim();
+    save();
+    if (el.dataset.field === "track") renderAlbums();
+  } else if (el.dataset.afield && albumEl) {
+    const v = el.value.trim();
+    groupSongs(albumEl.dataset.key).forEach(s => s[el.dataset.afield] = v);
+    save();
+    renderAlbums();
+  } else if (el.matches("[data-move]") && songRow) {
+    const s = songByPath(songRow.dataset.path);
+    let v = el.value;
+    if (v === "__new") { v = (prompt(t("newAlbumPrompt")) || "").trim(); if (!v) { renderAlbums(); return; } }
+    if (v === "__none") v = "";
+    const target = songs.find(o => albumKey(o) === v.toLowerCase() && o !== s);
+    s.album = v;
+    if (target) {
+      // Toma la carátula y el artista del álbum al que se mueve si no tiene
+      if (!s.cover && target.cover) { s.cover = target.cover; s.cover_src = target.cover_src; }
+      if (target.album_artist) s.album_artist = target.album_artist;
+    }
+    save();
+    renderAlbums();
+  }
+});
+$("#albums").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.matches("input")) e.target.blur(); });
+$("#albums").addEventListener("click", e => {
+  const rm = e.target.closest("[data-rm]");
+  if (rm) {
+    const p = rm.closest(".song").dataset.path;
+    songs = songs.filter(s => s.path !== p);
+    save(); renderAlbums(); renderFiles();
+    return;
+  }
+  const un = e.target.closest("[data-unify]");
+  if (un) {
+    const items = groupSongs(un.dataset.unify);
+    const main = mostCommon(items.map(s => s.cover));
+    const src = items.find(s => s.cover === main)?.cover_src || "custom";
+    items.forEach(s => { s.cover = main; s.cover_src = src; });
+    save(); renderAlbums();
+    return;
+  }
+  const cv = e.target.closest("[data-cover]");
+  if (cv) { coverTarget = cv.dataset.cover; $("#coverInput").value = ""; $("#coverInput").click(); }
+});
+$("#coverInput").onchange = async () => {
+  const file = $("#coverInput").files[0];
+  if (!file || coverTarget === null) return;
+  try {
+    const d = await api("/api/cover", { method: "POST", body: await file.arrayBuffer() });
+    groupSongs(coverTarget).forEach(s => { s.cover = d.cover; s.cover_src = "custom"; });
+    save(); renderAlbums();
+  } catch { toast(t("badImage")); }
+};
+$("#clearBtn").onclick = () => { songs = []; save(); renderAlbums(); renderFiles(); };
+
+// ---------------------------------------------------------------- Servicio y QR
+async function poll() {
+  try {
+    state = await api("/api/state");
+  } catch {
+    if (state && !poll.closedShown) { document.body.innerHTML = `<div class="placeholder" style="height:100vh"><h3>${t("closed")}</h3></div>`; poll.closedShown = true; }
+    return;
+  }
+  $("#ver").textContent = "v" + state.version;
+  const svc = $("#service");
+  svc.classList.toggle("on", state.on);
+  $("#svcSwitch").classList.toggle("on", state.on);
+  $("#svcLabel").textContent = state.error === "port" ? t("portError") : t(state.on ? "on" : "off");
+  const sel = $("#ipSel");
+  const opts = state.ips.map(ip => `<option ${ip === state.ip ? "selected" : ""}>${ip}</option>`).join("");
+  if (sel.dataset.v !== opts) { sel.innerHTML = opts; sel.dataset.v = opts; }
+  sel.style.display = state.ips.length > 1 ? "" : "none";
+  if (modalOpen) renderProgress();
+}
+setInterval(poll, 1000);
+
+$("#svcSwitch").onclick = async () => { await post("/api/service", { on: !(state && state.on) }); poll(); };
+$("#ipSel").onchange = async e => {
+  await post("/api/service", { ip: e.target.value });
+  if (modalOpen) makeQr(); else poll();
+};
+
+async function makeQr() {
+  $("#qrBtn").disabled = true;
+  try {
+    const d = await post("/api/share", { songs });
+    $("#qrBox").innerHTML = d.svg;
+    $("#qrUrl").textContent = d.url;
+    $("#progList").innerHTML = "";
+    modalOpen = true;
+    $("#modal").classList.add("show");
+    poll();
+  } catch { toast(t("portError")); }
+  $("#qrBtn").disabled = !songs.length;
+}
+$("#qrBtn").onclick = makeQr;
+$("#closeModal").onclick = () => { modalOpen = false; $("#modal").classList.remove("show"); };
+$("#stopBtn").onclick = async () => { await post("/api/service", { on: false }); modalOpen = false; $("#modal").classList.remove("show"); poll(); };
+
+function renderProgress() {
+  const items = state.items || [];
+  const done = items.filter(i => i.state === "done").length;
+  const active = items.some(i => i.state === "sending");
+  const st = $("#qrStatus");
+  st.classList.toggle("ok", items.length > 0 && done === items.length);
+  $("#qrStatusText").textContent = items.length && done === items.length ? t("finished", done)
+    : (active || state.list_reads ? t("connected") + (items.length ? ` · ${done}/${items.length}` : "") : t("waiting"));
+  if (!state.list_reads && !active && !done) { $("#progList").innerHTML = ""; return; }
+  $("#progList").innerHTML = items.map(i => {
+    const pct = i.size ? Math.min(100, Math.round(i.sent * 100 / i.size)) : 0;
+    const icon = i.state === "done" ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>'
+      : i.state === "sending" ? '<span class="spin"></span>'
+      : i.state === "error" ? '<svg width="16" height="16" viewBox="0 0 24 24" stroke="var(--err)" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>'
+      : '<svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="var(--faint)"/></svg>';
+    return `<div class="prog ${i.state}">${icon}<span class="n">${esc(i.name)}</span><span class="pct">${i.state === "pending" ? "" : pct + "%"}</span>
+      <span></span><div class="bar"><i style="width:${i.state === "done" ? 100 : pct}%"></i></div></div>`;
+  }).join("");
+}
+
+// ---------------------------------------------------------------- General
+$("#langBtn").onclick = () => {
+  lang = lang === "es" ? "en" : "es";
+  localStorage.setItem("lang", lang);
+  applyI18n(); renderFiles(); renderAlbums(); poll();
+  loadPlaces();
+};
+$("#quitBtn").onclick = async () => {
+  if (state && (state.items || []).some(i => i.state === "sending") && !confirm(t("confirmQuit"))) return;
+  try { await post("/api/quit", {}); } catch {}
+  window.close();
+  setTimeout(() => { document.body.innerHTML = `<div class="placeholder" style="height:100vh"><h3>${t("closed")}</h3></div>`; }, 300);
+};
+window.addEventListener("pagehide", () => navigator.sendBeacon("/api/bye", "{}"));
+window.addEventListener("beforeunload", e => {
+  if (state && (state.items || []).some(i => i.state === "sending")) { e.preventDefault(); e.returnValue = ""; }
+});
+
+(async () => {
+  applyI18n();
+  const start = await loadPlaces();
+  await openDir(start).catch(() => openDir(""));
+  try {
+    const pre = await post("/api/preload", {});
+    const have = new Set(songs.map(s => s.path));
+    songs.push(...pre.songs.filter(s => !have.has(s.path)));
+    save();
+  } catch {}
+  renderAlbums();
+  renderFiles();
+  poll();
+})();
+</script>
+</body>
+</html>

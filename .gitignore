@@ -1,0 +1,11 @@
+# 3DS
+3ds/build/
+3ds/*.3dsx
+3ds/*.elf
+3ds/*.smdh
+3ds/*.cia
+# PC
+pc/build/
+pc/dist/
+__pycache__/
+*.pyc
