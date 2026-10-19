@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sound3DS Share: pasa canciones del PC a la consola con la app Sound3DS QR.
+"""Sound3DS Share: pasa canciones del PC a la consola (Sound3DS > Recibir desde el PC, o la app Sound3DS QR).
 
 Abre una interfaz (ventana de Edge/Chrome/Chromium en modo app, o el navegador
 predeterminado) para explorar los archivos, elegir canciones, revisar sus
