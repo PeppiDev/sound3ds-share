@@ -153,6 +153,21 @@ button.badge:hover { filter: brightness(1.25); }
 .prog .pct { text-align: right; color: var(--faint); font-size: 12px; }
 .sheet-foot { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
 .hint { font-size: 12px; color: var(--faint); }
+.scbtn { display: inline-flex; align-items: center; gap: 8px; padding: 7px 13px; border-radius: 999px; font-weight: 600;
+  font-size: 13px; background: rgba(255,119,0,.14); color: #ffa24d; border: 1px solid rgba(255,119,0,.45); }
+.scbtn:hover { background: rgba(255,119,0,.24); }
+.scbtn.connected { background: rgba(80,214,128,.12); color: var(--ok); border-color: rgba(80,214,128,.4); }
+.sheet.narrow { grid-template-columns: 1fr; width: min(540px, 94vw); }
+.sheet.narrow .steps { padding: 26px 28px; }
+.warnbox { background: rgba(255,184,72,.10); border: 1px solid rgba(255,184,72,.35); color: #ffd28f; border-radius: 10px; padding: 12px 14px; }
+.sc-qr { display: flex; gap: 20px; align-items: center; }
+.sc-qr .qrbox { width: 200px; height: 200px; flex: none; }
+.bigspin { width: 34px; height: 34px; border: 3px solid var(--line); border-top-color: #ff7700; border-radius: 50%; animation: spin .9s linear infinite; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 12px; color: var(--dim); }
+.field input { width: 100%; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+details.adv summary { cursor: pointer; color: var(--dim); }
+details.adv[open] summary { color: var(--text); margin-bottom: 10px; }
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--panel2); border: 1px solid var(--line);
   padding: 10px 16px; border-radius: 10px; opacity: 0; transition: .2s; pointer-events: none; z-index: 20; }
 .toast.show { opacity: 1; }
@@ -168,12 +183,14 @@ button.badge:hover { filter: brightness(1.25); }
     Sound3DS Share <small id="ver"></small>
   </div>
   <div class="spacer"></div>
+  <button class="scbtn" id="scBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 10a5.5 5.5 0 0 0-10.6-2A4.5 4.5 0 0 0 7.5 17h10a3.5 3.5 0 0 0 0-7z"/></svg><span id="scBtnText"></span></button>
   <div class="service" id="service">
     <span class="dot"></span>
     <span class="label" id="svcLabel"></span>
     <select id="ipSel" title=""></select>
     <button class="switch" id="svcSwitch" aria-label="service"></button>
   </div>
+  <button class="iconbtn" id="setBtn" data-t-title="settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   <button class="lang" id="langBtn">EN</button>
   <button class="iconbtn" id="quitBtn" data-t-title="quit"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v9M6.3 6.3a8 8 0 1 0 11.4 0"/></svg></button>
 </header>
@@ -238,6 +255,29 @@ button.badge:hover { filter: brightness(1.25); }
     </div>
   </div>
 </div>
+<div class="modal" id="scModal">
+  <div class="sheet narrow">
+    <div class="steps" id="scBody"></div>
+  </div>
+</div>
+<div class="modal" id="setModal">
+  <div class="sheet narrow">
+    <div class="steps">
+      <h2 data-t="settings"></h2>
+      <details class="adv">
+        <summary data-t="advanced"></summary>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="warnbox" data-t="manualWarn"></div>
+          <div class="hint" data-t-html="manualHow"></div>
+          <div class="field"><label>oauth_token</label><input type="text" id="manToken" autocomplete="off" spellcheck="false"></div>
+          <div class="field"><label>oauth_refresh_token</label><input type="text" id="manRefresh" autocomplete="off" spellcheck="false"></div>
+          <div class="sheet-foot"><button class="btn primary" id="manBtn" data-t="manualConnect"></button></div>
+        </div>
+      </details>
+      <div class="sheet-foot"><button class="btn" id="setClose" data-t="close"></button></div>
+    </div>
+  </div>
+</div>
 <input type="file" id="coverInput" accept="image/*" hidden>
 <div class="toast" id="toast"></div>
 
@@ -271,6 +311,25 @@ const I18N = {
     limited: "Solo se agregaron las primeras 1000", reading: "Leyendo etiquetas…", badImage: "No se pudo leer esa imagen",
     total: (n, mb) => `${n} canción${n == 1 ? "" : "es"} · ${mb}`, closed: "Sound3DS Share se cerró. Puedes cerrar esta ventana.",
     confirmQuit: "La consola todavía está descargando. ¿Cerrar igual?",
+    scConnect: "Conectar SoundCloud", scConnected: n => `SoundCloud: ${n}`, settings: "Configuración", close: "Cerrar",
+    cancel: "Cancelar", continue: "Continuar", retry: "Reintentar", done: "Listo",
+    scTitle: "Conectar tu cuenta de SoundCloud",
+    scIntro: "Sound3DS podrá mostrar tus likes, tus playlists y las canciones de quienes sigues. Inicias sesión en la página oficial de SoundCloud: tu contraseña nunca pasa por esta app.",
+    scWarn: "Sound3DS guardará tu sesión de SoundCloud en la tarjeta SD. Cualquiera que copie la SD podría usar tu cuenta. No compartas la tarjeta y usa Desconectar en Configuración si vas a prestarla o venderla.",
+    scWaiting: "Inicia sesión en la ventana de SoundCloud que se abrió (con Google, Apple o el código de verificación si te lo pide). Esta ventana sigue sola cuando entres.",
+    scReady: n => `Cuenta lista: <b>${n}</b>`,
+    scScan: "Abre <b>Sound3DS QR</b> en la consola y escanea este código. Sirve una sola vez y vence en 10 minutos.",
+    scExpires: m => `Vence en ${m} min`,
+    scDelivered: n => `La consola quedó conectada a <b>${n}</b>.`,
+    scDeliveredHint: "Ya puedes cerrar esto. La sesión se renueva sola en la consola.",
+    scErr: { no_browser: "No se encontró Edge, Chrome, Chromium ni Brave. Instala uno o usa la opción avanzada en Configuración.",
+             closed: "Se cerró la ventana de SoundCloud antes de iniciar sesión.", timeout: "Pasaron 10 minutos sin iniciar sesión.",
+             invalid: "SoundCloud no aceptó la sesión. Vuelve a intentarlo.", expired: "El código venció sin que la consola lo escaneara.",
+             browser: "No se pudo controlar la ventana del navegador.", port: "No se pudo abrir el puerto para la consola." },
+    advanced: "Opciones avanzadas",
+    manualWarn: "Usa esto solo si no tienes Edge, Chrome, Chromium o Brave instalado.",
+    manualHow: "En soundcloud.com, con la sesión iniciada, abre las herramientas de desarrollador del navegador → Almacenamiento → Cookies y copia <b>oauth_token</b> y <b>oauth_refresh_token</b>. Sin el segundo, la consola no podrá renovar la sesión y habrá que reconectar cada día.",
+    manualConnect: "Conectar con estos datos",
   },
   en: {
     files: "Your files", up: "Up", filter: "Filter this folder", selectAll: "Select all",
@@ -300,6 +359,25 @@ const I18N = {
     limited: "Only the first 1000 were added", reading: "Reading tags…", badImage: "Couldn't read that image",
     total: (n, mb) => `${n} song${n == 1 ? "" : "s"} · ${mb}`, closed: "Sound3DS Share has closed. You can close this window.",
     confirmQuit: "The console is still downloading. Close anyway?",
+    scConnect: "Connect SoundCloud", scConnected: n => `SoundCloud: ${n}`, settings: "Settings", close: "Close",
+    cancel: "Cancel", continue: "Continue", retry: "Try again", done: "Done",
+    scTitle: "Connect your SoundCloud account",
+    scIntro: "Sound3DS will be able to show your likes, your playlists and tracks from people you follow. You sign in on SoundCloud's official page: your password never goes through this app.",
+    scWarn: "Sound3DS will store your SoundCloud session on the SD card. Anyone who copies the SD card could use your account. Don't share the card, and use Disconnect in Settings before lending or selling it.",
+    scWaiting: "Sign in on the SoundCloud window that just opened (with Google, Apple or the verification code if asked). This screen moves on by itself once you're in.",
+    scReady: n => `Account ready: <b>${n}</b>`,
+    scScan: "Open <b>Sound3DS QR</b> on your console and scan this code. It works once and expires in 10 minutes.",
+    scExpires: m => `Expires in ${m} min`,
+    scDelivered: n => `Your console is now connected to <b>${n}</b>.`,
+    scDeliveredHint: "You can close this. The console renews the session by itself.",
+    scErr: { no_browser: "Edge, Chrome, Chromium or Brave wasn't found. Install one or use the advanced option in Settings.",
+             closed: "The SoundCloud window was closed before signing in.", timeout: "10 minutes passed without signing in.",
+             invalid: "SoundCloud didn't accept the session. Try again.", expired: "The code expired before the console scanned it.",
+             browser: "Couldn't control the browser window.", port: "Couldn't open the port for the console." },
+    advanced: "Advanced options",
+    manualWarn: "Use this only if you don't have Edge, Chrome, Chromium or Brave installed.",
+    manualHow: "On soundcloud.com, signed in, open the browser's developer tools → Storage → Cookies and copy <b>oauth_token</b> and <b>oauth_refresh_token</b>. Without the second one the console can't renew the session and you'll need to reconnect every day.",
+    manualConnect: "Connect with these values",
   },
 };
 let lang = localStorage.getItem("lang") || ((navigator.language || "en").startsWith("es") ? "es" : "en");
@@ -656,7 +734,8 @@ function renderProgress() {
 $("#langBtn").onclick = () => {
   lang = lang === "es" ? "en" : "es";
   localStorage.setItem("lang", lang);
-  applyI18n(); renderFiles(); renderAlbums(); poll();
+  applyI18n(); renderFiles(); renderAlbums(); poll(); scPoll();
+  if ($("#scModal").classList.contains("show")) scRender();
   loadPlaces();
 };
 $("#quitBtn").onclick = async () => {
@@ -670,8 +749,75 @@ window.addEventListener("beforeunload", e => {
   if (state && (state.items || []).some(i => i.state === "sending")) { e.preventDefault(); e.returnValue = ""; }
 });
 
+// ---------------------------------------------------------------- Cuenta de SoundCloud
+let sc = { state: "idle" }, scStep = "intro", scTimer = null;
+const ICON_CLOUD = '<svg width="34" height="34" viewBox="0 0 24 24" fill="#ff7700"><path d="M17.5 10a5.5 5.5 0 0 0-10.6-2A4.5 4.5 0 0 0 7.5 17h10a3.5 3.5 0 0 0 0-7z"/></svg>';
+function scRender() {
+  const b = $("#scBody");
+  const errText = c => (I18N[lang].scErr[c] || c);
+  if (scStep === "intro") {
+    b.innerHTML = `<h2>${ICON_CLOUD} ${t("scTitle")}</h2><p class="hint" style="font-size:13px">${t("scIntro")}</p>
+      <div class="warnbox">${t("scWarn")}</div>
+      <div class="sheet-foot"><button class="btn" data-sc="close">${t("cancel")}</button><button class="btn primary" data-sc="start">${t("continue")}</button></div>`;
+  } else if (sc.state === "waiting") {
+    b.innerHTML = `<h2>${ICON_CLOUD} ${t("scTitle")}</h2><div style="display:flex;gap:16px;align-items:center"><div class="bigspin"></div>
+      <div>${t("scWaiting")}</div></div><div class="sheet-foot"><button class="btn" data-sc="cancel">${t("cancel")}</button></div>`;
+  } else if (sc.state === "ready") {
+    b.innerHTML = `<h2>${ICON_CLOUD} ${t("scReady", esc(sc.username))}</h2><div class="sc-qr"><div class="qrbox">${sc.svg || ""}</div>
+      <div><p>${t("scScan")}</p><div class="status"><span class="pulse"></span><span>${t("waiting")}</span></div>
+      <p class="hint">${t("scExpires", Math.ceil(sc.expires_in / 60))}</p></div></div>
+      <div class="hint">${t("sameWifi")}</div><div class="sheet-foot"><button class="btn" data-sc="cancel">${t("cancel")}</button></div>`;
+  } else if (sc.state === "delivered") {
+    b.innerHTML = `<h2>${ICON_CLOUD} ${t("done")}</h2><div class="status ok"><span class="pulse"></span><span>${t("scDelivered", esc(sc.username))}</span></div>
+      <p class="hint">${t("scDeliveredHint")}</p><div class="sheet-foot"><button class="btn primary" data-sc="close">${t("close")}</button></div>`;
+  } else if (sc.state === "error") {
+    b.innerHTML = `<h2>${ICON_CLOUD} ${t("scTitle")}</h2><div class="warnbox">${errText(sc.error)}</div>
+      <div class="sheet-foot"><button class="btn" data-sc="close">${t("close")}</button><button class="btn primary" data-sc="start">${t("retry")}</button></div>`;
+  } else {
+    scStep = "intro";
+    return scRender();
+  }
+}
+async function scPoll() {
+  try { sc = await api("/api/sc/state"); } catch { return; }
+  const btn = $("#scBtn");
+  btn.classList.toggle("connected", sc.state === "delivered");
+  $("#scBtnText").textContent = sc.state === "delivered" ? t("scConnected", sc.username) : t("scConnect");
+  if ($("#scModal").classList.contains("show") && scStep !== "intro") scRender();
+}
+function scOpen() {
+  scStep = sc.state === "idle" || sc.state === "error" ? "intro" : "flow";
+  $("#scModal").classList.add("show");
+  scRender();
+  clearInterval(scTimer);
+  scTimer = setInterval(scPoll, 1000);
+}
+$("#scBtn").onclick = scOpen;
+$("#scBody").addEventListener("click", async e => {
+  const a = e.target.closest("[data-sc]")?.dataset.sc;
+  if (a === "start") { scStep = "flow"; sc = await post("/api/sc/connect", {}); scRender(); }
+  else if (a === "cancel") { sc = await post("/api/sc/cancel", {}); scStep = "intro"; $("#scModal").classList.remove("show"); }
+  else if (a === "close") { $("#scModal").classList.remove("show"); clearInterval(scTimer); scTimer = setInterval(scPoll, 5000); }
+});
+$("#setBtn").onclick = () => $("#setModal").classList.add("show");
+$("#setClose").onclick = () => $("#setModal").classList.remove("show");
+$("#manBtn").onclick = async () => {
+  const token = $("#manToken").value.trim();
+  if (!token) return;
+  sc = await post("/api/sc/manual", { token, refresh: $("#manRefresh").value.trim() });
+  $("#manToken").value = $("#manRefresh").value = "";
+  $("#setModal").classList.remove("show");
+  scStep = "flow";
+  $("#scModal").classList.add("show");
+  scRender();
+  clearInterval(scTimer);
+  scTimer = setInterval(scPoll, 1000);
+};
+
 (async () => {
   applyI18n();
+  scPoll();
+  scTimer = setInterval(scPoll, 5000);
   const start = await loadPlaces();
   await openDir(start).catch(() => openDir(""));
   try {

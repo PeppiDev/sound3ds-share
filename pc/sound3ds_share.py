@@ -30,6 +30,7 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from mutagen.id3 import APIC, ID3, TALB, TIT2, TPE1, TPE2, TRCK
+from sc_account import ACCOUNT
 import qrcode
 import qrcode.image.svg
 
@@ -412,6 +413,20 @@ class ConsoleHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = urllib.parse.urlsplit(self.path).path
         SHARE.last_activity = time.time()
+        # Cuenta de SoundCloud: el enlace del QR responde una sola vez
+        m = re.match(r"^/account/([A-Za-z0-9_-]{16,64})$", path)
+        if m:
+            body = ACCOUNT.take(m.group(1))
+            if body is None:
+                self.send_error(404)
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+            return
         if path == "/sound3ds.txt":
             body = SHARE.listing().encode()
             with SHARE.lock:
@@ -543,6 +558,16 @@ class UIHandler(BaseHTTPRequestHandler):
             self._json({"on": SHARE.on, "ip": SHARE.ip, "ips": lan_ips(), "port": SHARE.port,
                         "url": SHARE.url(), "error": SHARE.error, "items": items, "list_reads": reads,
                         "version": VERSION})
+        elif u.path == "/api/sc/state":
+            st = ACCOUNT.status()
+            if st["state"] == "ready":
+                # El QR apunta al servicio de la red local: se enciende si estaba apagado
+                if not SHARE.start():
+                    st["error"] = "port"
+                link = f"http://{SHARE.ip}:{SHARE.port}/account/{st['code']}"
+                st["svg"] = qr_svg(link)
+            st.pop("code", None)
+            self._json(st)
         else:
             self.send_error(404)
 
@@ -576,6 +601,16 @@ class UIHandler(BaseHTTPRequestHandler):
             paths, App.preload = App.preload, []
             files = expand(paths)
             self._json({"songs": [read_meta(p) for p in files]})
+        elif u.path == "/api/sc/connect":
+            ACCOUNT.start()
+            self._json(ACCOUNT.status() | {"code": None})
+        elif u.path == "/api/sc/manual":
+            data = json.loads(self._body() or b"{}")
+            ACCOUNT.manual(data.get("token", ""), data.get("refresh", ""))
+            self._json(ACCOUNT.status() | {"code": None})
+        elif u.path == "/api/sc/cancel":
+            ACCOUNT.cancel()
+            self._json(ACCOUNT.status() | {"code": None})
         elif u.path == "/api/bye":
             App.bye_at = time.time() + 5   # se cierra salvo que la página vuelva (recarga)
             self._json({})
@@ -647,6 +682,7 @@ def main():
             break
         if App.seen_ui and now - App.last_ping > 180 and not busy:
             break
+    ACCOUNT.cancel()
     SHARE.stop()
     ui.shutdown()
 
