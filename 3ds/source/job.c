@@ -1,10 +1,13 @@
 #include "job.h"
 #include <curl/curl.h>
+#include <jansson.h>
 #include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/stat.h>
+#include <time.h>
 
 #define SOC_ALIGN 0x1000
 #define SOC_BUFFERSIZE 0x100000
@@ -185,6 +188,94 @@ static bool collect_urls(CURL* c, const char* qr) {
 }
 
 // ---------------------------------------------------------------------------
+// Cuenta de SoundCloud
+// ---------------------------------------------------------------------------
+
+// ¿El QR es el enlace de un solo uso de Sound3DS Share: http://<ip>:<puerto>/account/<código>?
+static bool is_account_url(const char* qr) {
+    if (strncmp(qr, "http://", 7) != 0) return false;
+    const char* p = strstr(qr + 7, "/account/");
+    if (!p || p != strchr(qr + 7, '/')) return false;
+    p += 9;
+    size_t n = strspn(p, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-");
+    return n >= 16 && n <= 64 && (p[n] == 0 || p[n] == '\r' || p[n] == '\n');
+}
+
+static const char* json_str(json_t* o, const char* key, size_t max) {
+    const char* v = json_string_value(json_object_get(o, key));
+    return v && *v && strlen(v) < max ? v : NULL;
+}
+
+// Baja la cuenta y la guarda en ACCOUNT_PATH. Solo se copian los campos
+// conocidos, así un archivo raro no termina en la SD. Nada de esto se registra:
+// los tokens dan acceso a la cuenta.
+static void receive_account(CURL* c, const char* url) {
+    char clean[URL_LEN];
+    snprintf(clean, sizeof(clean), "%.*s", (int)strcspn(url, "\r\n"), url);
+    Mem m = {0};
+    curl_easy_reset(c);
+    common_opts(c, clean);
+    curl_easy_setopt(c, CURLOPT_WRITEFUNCTION, mem_write);
+    curl_easy_setopt(c, CURLOPT_WRITEDATA, &m);
+    curl_easy_setopt(c, CURLOPT_TIMEOUT, 20L);
+    curl_easy_setopt(c, CURLOPT_NOPROGRESS, 0L);
+    curl_easy_setopt(c, CURLOPT_XFERINFOFUNCTION, cancel_cb);
+    CURLcode res = curl_easy_perform(c);
+    long http = 0;
+    curl_easy_getinfo(c, CURLINFO_RESPONSE_CODE, &http);
+
+    JobError err = JERR_NONE;
+    char user[64] = "";
+    if (res != CURLE_OK || !m.data) {
+        // 404: el enlace ya se usó o venció; lo demás es de red
+        err = (res == CURLE_HTTP_RETURNED_ERROR && http == 404) ? JERR_ACCOUNT : JERR_LIST;
+    } else {
+        json_t* in = json_loads(m.data, 0, NULL);
+        const char* name = json_str(in, "username", 64);
+        const char* access = json_str(in, "access_token", 4096);
+        const char* refresh = json_str(in, "refresh_token", 512);
+        const char* client = json_str(in, "auth_client_id", 128);
+        json_t* uid = json_object_get(in, "user_id");
+        // Con el token pegado a mano puede no venir refresh ni client_id: entonces
+        // Sound3DS no puede renovarla y pide volver a conectar cuando vence
+        if (!refresh || !client) refresh = client = "";
+        if (!name || !access || !json_is_integer(uid)) {
+            err = JERR_ACCOUNT;
+        } else {
+            json_t* out = json_pack("{s:s, s:I, s:s, s:s, s:s, s:I}",
+                                    "username", name, "user_id", json_integer_value(uid),
+                                    "access_token", access, "refresh_token", refresh,
+                                    "auth_client_id", client,
+                                    // Hora de la consola, no la del PC: Sound3DS calcula la
+                                    // edad del token con este mismo reloj (que puede no estar en UTC)
+                                    "obtained_at", (json_int_t)time(NULL));
+            mkdir("sdmc:/3ds", 0777);
+            mkdir(ACCOUNT_DIR, 0777);
+            // Primero a un temporal y luego se renombra: un corte no deja el archivo a medias
+            if (out && json_dump_file(out, ACCOUNT_PATH ".tmp", JSON_COMPACT) == 0) {
+                remove(ACCOUNT_PATH);
+                if (rename(ACCOUNT_PATH ".tmp", ACCOUNT_PATH) == 0) snprintf(user, sizeof(user), "%s", name);
+                else err = JERR_SD;
+            } else {
+                remove(ACCOUNT_PATH ".tmp");
+                err = JERR_SD;
+            }
+            json_decref(out);
+        }
+        json_decref(in);
+    }
+    if (m.data) memset(m.data, 0, m.size);   // no dejar los tokens en la memoria libre
+    free(m.data);
+
+    LightLock_Lock(&s_lock);
+    s_st.error = s_cancel ? JERR_NONE : err;
+    s_st.cancelled = s_cancel;
+    snprintf(s_st.username, sizeof(s_st.username), "%s", user);
+    s_st.phase = JOB_DONE;
+    LightLock_Unlock(&s_lock);
+}
+
+// ---------------------------------------------------------------------------
 // Descarga de cada canción
 // ---------------------------------------------------------------------------
 
@@ -255,6 +346,11 @@ static void set_item(int i, ItemState st) {
 static void job_thread(void* arg) {
     (void)arg;
     CURL* c = curl_easy_init();
+    if (c && is_account_url(s_qr)) {
+        receive_account(c, s_qr);
+        curl_easy_cleanup(c);
+        return;
+    }
     bool list_ok = c && collect_urls(c, s_qr);
 
     LightLock_Lock(&s_lock);
@@ -291,6 +387,7 @@ bool job_start(const char* qr_text) {
     s_st.phase = JOB_LIST;
     s_cancel = false;
     snprintf(s_qr, sizeof(s_qr), "%s", qr_text);
+    s_st.account = is_account_url(s_qr);
     s32 prio = 0x30;
     svcGetThreadPriority(&prio, CUR_THREAD_HANDLE);
     // Un poco menos de prioridad que la interfaz para que las animaciones no se traben

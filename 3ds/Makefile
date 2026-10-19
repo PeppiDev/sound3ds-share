@@ -38,6 +38,7 @@ ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 CFLAGS	:=	-g -Wall -O2 -mword-relocations \
 			-ffunction-sections \
 			$(ARCH)
+CFLAGS	+=	$(EXTRA)
 
 CFLAGS	+=	$(INCLUDE) -D__3DS__ -DARM11 -DUSE_DEFAULT_STDLIB
 
@@ -49,7 +50,7 @@ LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 PORTLIBS	:= $(DEVKITPRO)/portlibs/3ds
 LIBDIRS		:= $(PORTLIBS) $(CTRULIB)
 
-LIBS	:= -lcitro2d -lcitro3d -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lz -lctru -lm
+LIBS	:= -lcitro2d -lcitro3d -ljansson -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lz -lctru -lm
 
 #---------------------------------------------------------------------------------
 ifneq ($(BUILD),$(notdir $(CURDIR)))

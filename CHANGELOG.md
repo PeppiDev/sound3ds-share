@@ -9,6 +9,9 @@
 - Antes de iniciar sesión se muestra la advertencia de seguridad sobre guardar la sesión en la SD.
 - Opción avanzada, oculta en Configuración, para pegar el token a mano si no hay un navegador compatible.
 
+### Sound3DS QR (consola)
+- Reconoce el QR de **Conectar SoundCloud**: baja la cuenta del enlace de un solo uso y la guarda en `sdmc:/3ds/sound3ds/account.json` (escrita a un temporal y luego renombrada, solo con los campos conocidos y la hora de la consola). Muestra "Cuenta conectada" con el usuario y, una vez, la advertencia de seguridad. Si el QR ya se usó o venció lo explica y no toca la cuenta guardada.
+
 ## [1.0.0] - 2026-10-18
 
 Primera versión pública.

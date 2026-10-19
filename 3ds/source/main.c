@@ -166,6 +166,21 @@ int main(int argc, char** argv) {
     scan_camera_on();
     s_dec_enabled = true;
 
+#ifdef QR_AUTOTEST
+    // Prueba en el emulador (sin cámara): el texto del QR sale de un archivo
+    {
+        FILE* f = fopen("sdmc:/3ds/sound3ds/qr_autotest.txt", "r");
+        if (f) {
+            if (fgets(qr, sizeof(qr), f)) {
+                qr[strcspn(qr, "\r\n")] = 0;
+                s_dec_enabled = false;
+                m.found_t = 0;
+            }
+            fclose(f);
+        }
+    }
+#endif
+
     while (aptMainLoop()) {
         u64 now_ms = osGetTime();
         float dt = (now_ms - last_ms) / 1000.0f;

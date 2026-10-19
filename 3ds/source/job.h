@@ -3,7 +3,8 @@
 
 // Descarga en segundo plano de lo que trae un QR: la URL de una canción, varias
 // URLs o la URL de una lista (texto, una URL por línea, como la que sirve
-// Sound3DS Share en el PC). Corre en su propio hilo para que la interfaz siga
+// Sound3DS Share en el PC). También recibe la cuenta de SoundCloud que manda
+// Sound3DS Share (enlace /account/<código>) y la guarda para Sound3DS. Corre en su propio hilo para que la interfaz siga
 // respondiendo (HOME, cancelar, animaciones) mientras baja todo.
 
 #include <3ds.h>
@@ -14,7 +15,10 @@
 
 typedef enum { IT_PENDING, IT_ACTIVE, IT_OK, IT_EXISTS, IT_FAIL, IT_CANCEL } ItemState;
 typedef enum { JOB_IDLE, JOB_LIST, JOB_DOWNLOAD, JOB_DONE } JobPhase;
-typedef enum { JERR_NONE, JERR_LIST, JERR_EMPTY, JERR_SD } JobError;
+typedef enum { JERR_NONE, JERR_LIST, JERR_EMPTY, JERR_SD, JERR_ACCOUNT } JobError;
+
+#define ACCOUNT_DIR  "sdmc:/3ds/sound3ds"
+#define ACCOUNT_PATH ACCOUNT_DIR "/account.json"
 
 typedef struct {
     char name[96];
@@ -30,6 +34,8 @@ typedef struct {
     int ok, skipped, failed;
     bool cancelled;
     JobError error;
+    bool account;         // el QR traía una cuenta de SoundCloud, no canciones
+    char username[64];    // cuenta guardada (vacío si falló)
 } JobStatus;
 
 bool job_net_init(void);

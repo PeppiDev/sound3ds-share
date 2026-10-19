@@ -169,6 +169,34 @@ static void text_fit_c(float cx, float y, float scale, u32 color, const char* st
     text_c(cx, y, scale, color, buf);
 }
 
+// Texto en varias líneas cortando en espacios; devuelve la y siguiente
+static float text_wrap(float x, float y, float scale, u32 color, const char* str, float max_w, float line_h) {
+    char line_buf[200];
+    const char* p = str;
+    while (*p) {
+        size_t best = 0, n = 0;
+        while (p[n]) {
+            size_t next = n;
+            while (p[next] && p[next] != ' ') next++;
+            if (next >= sizeof(line_buf)) break;
+            memcpy(line_buf, p, next);
+            line_buf[next] = 0;
+            if (best && text_width(line_buf, scale) > max_w) break;
+            best = next;
+            if (!p[next]) break;
+            n = next + 1;
+        }
+        if (!best) best = strlen(p) < sizeof(line_buf) - 1 ? strlen(p) : sizeof(line_buf) - 1;
+        memcpy(line_buf, p, best);
+        line_buf[best] = 0;
+        text(x, y, scale, color, line_buf);
+        y += line_h;
+        p += best;
+        while (*p == ' ') p++;
+    }
+    return y;
+}
+
 // Círculos como abanico de triángulos (Azahar no dibuja C2D_DrawCircleSolid)
 static void circle(float cx, float cy, float r, u32 color) {
     int segs = r < 5 ? 12 : (r < 14 ? 20 : 36);
@@ -262,6 +290,14 @@ static void icon_note(float x, float y, float sz, u32 color) {
     line(x + sz * 0.26f, y - sz * 0.85f, x + sz * 0.6f, y - sz * 0.55f, sz * 0.12f, color);
 }
 
+static void icon_cloud(float cx, float cy, float sz, u32 color) {
+    float z = zn();
+    ellipse_z(cx - sz * 0.22f, cy + sz * 0.02f, sz * 0.2f, sz * 0.2f, z, color);
+    ellipse_z(cx + sz * 0.05f, cy - sz * 0.08f, sz * 0.27f, sz * 0.27f, z, color);
+    ellipse_z(cx + sz * 0.3f, cy + sz * 0.06f, sz * 0.17f, sz * 0.17f, z, color);
+    C2D_DrawRectSolid(cx - sz * 0.22f, cy + sz * 0.02f, z, sz * 0.52f, sz * 0.2f, color);
+}
+
 static void gradient(float x, float y, float w, float h, u32 top, u32 bottom) {
     C2D_DrawRectangle(x, y, zn(), w, h, top, top, bottom, bottom);
 }
@@ -346,11 +382,13 @@ static void draw_top_work(const UiModel* m) {
     const float cx = TOP_W / 2, cy = 92, r = 58;
     char buf[96];
 
-    if (j->phase == JOB_LIST || j->count == 0) {
+    if (j->account || j->phase == JOB_LIST || j->count == 0) {
         arc(cx, cy, r, 9, 0, 6.2832f, C2D_Color32(255, 255, 255, 24), false);
         spinner(cx, cy, r, 9, COL_ACCENT);
-        icon_note(cx - 6, cy + 14, 34, COL_TEXT);
-        text_c(cx, 172, 0.62f, COL_TEXT, T("Leyendo la lista del PC...", "Reading the list from the PC..."));
+        if (j->account) icon_cloud(cx, cy + 4, 46, COL_TEXT);
+        else icon_note(cx - 6, cy + 14, 34, COL_TEXT);
+        text_c(cx, 172, 0.62f, COL_TEXT, j->account ? T("Recibiendo la cuenta de SoundCloud...", "Receiving the SoundCloud account...")
+                                                    : T("Leyendo la lista del PC...", "Reading the list from the PC..."));
         return;
     }
 
@@ -385,8 +423,42 @@ static void draw_top_work(const UiModel* m) {
     if (cur > 0.02f) rrect(70, 218, 260 * cur, 8, 4, COL_CYAN);
 }
 
+static void draw_top_account(const UiModel* m) {
+    const JobStatus* j = &m->job;
+    gradient(0, 0, TOP_W, TOP_H, COL_BG2, COL_BG);
+    const float cx = TOP_W / 2, cy = 84;
+    bool ok = j->username[0] != 0;
+    u32 col = ok ? COL_OK : (j->cancelled ? COL_WARN : COL_ERR);
+    circle(cx, cy, 44, alpha(col, 0.25f));
+    circle(cx, cy, 36, col);
+    if (ok) icon_check(cx, cy, 40, COL_INK);
+    else if (j->cancelled) {
+        C2D_DrawRectSolid(cx - 3.5f, cy - 18, zn(), 7, 23, COL_INK);
+        C2D_DrawRectSolid(cx - 3.5f, cy + 10, zn(), 7, 7, COL_INK);
+    } else icon_cross(cx, cy, 34, COL_INK);
+
+    if (ok) {
+        text_c(cx, 138, 0.8f, COL_TEXT, T("Cuenta conectada", "Account connected"));
+        text_fit_c(cx, 170, 0.62f, COL_ACCENT, j->username, 360);
+        text_c(cx, 198, 0.45f, COL_DIM, T("Abre Sound3DS para usarla", "Open Sound3DS to use it"));
+    } else if (j->cancelled) {
+        text_c(cx, 138, 0.8f, COL_TEXT, T("Cancelado", "Cancelled"));
+    } else {
+        text_c(cx, 138, 0.8f, COL_TEXT, T("No se pudo conectar la cuenta", "Couldn't connect the account"));
+        const char* why = j->error == JERR_ACCOUNT
+            ? T("El QR ya se usó o venció. Toca Conectar SoundCloud de nuevo.", "The QR was already used or expired. Click Connect SoundCloud again.")
+            : j->error == JERR_SD ? T("No se pudo guardar en la tarjeta SD.", "Couldn't save to the SD card.")
+                                  : T("Revisa que el PC y la consola estén en la misma red.", "Make sure the PC and console share the same network.");
+        text_fit_c(cx, 174, 0.47f, COL_DIM, why, 380);
+    }
+}
+
 static void draw_top_done(const UiModel* m) {
     const JobStatus* j = &m->job;
+    if (j->account) {
+        draw_top_account(m);
+        return;
+    }
     float t = now_s();
     gradient(0, 0, TOP_W, TOP_H, COL_BG2, COL_BG);
     const float cx = TOP_W / 2, cy = 84;
@@ -565,9 +637,10 @@ static float overall(const JobStatus* j) {
 static void draw_bottom_work(const UiModel* m) {
     const JobStatus* j = &m->job;
     draw_header(m, overall(j));
-    if (j->phase == JOB_LIST || m->item_count == 0) {
+    if (j->account || j->phase == JOB_LIST || m->item_count == 0) {
         spinner(BOT_W / 2, 110, 16, 4, COL_ACCENT);
-        text_c(BOT_W / 2, 140, 0.5f, COL_DIM, T("Buscando canciones...", "Looking for songs..."));
+        text_c(BOT_W / 2, 140, 0.5f, COL_DIM, j->account ? T("Conectando con Sound3DS Share...", "Connecting to Sound3DS Share...")
+                                                         : T("Buscando canciones...", "Looking for songs..."));
     } else {
         int first = j->current - 3;
         if (first > m->item_count - UI_LIST_ROWS) first = m->item_count - UI_LIST_ROWS;
@@ -580,7 +653,24 @@ static void draw_bottom_work(const UiModel* m) {
 
 static void draw_bottom_done(const UiModel* m) {
     draw_header(m, m->job.count ? 1.0f : 0.0f);
-    if (m->item_count > 0) {
+    if (m->job.account && m->job.username[0]) {
+        // Advertencia de seguridad: se muestra una vez, al recibir la cuenta
+        rrect(8, 46, 304, 152, 10, COL_PANEL);
+        circle(26, 64, 9, COL_WARN);
+        C2D_DrawRectSolid(24.5f, 58, zn(), 3, 7, COL_INK);
+        C2D_DrawRectSolid(24.5f, 67, zn(), 3, 3, COL_INK);
+        text(42, 55, 0.55f, COL_WARN, T("Importante", "Important"));
+        text_wrap(18, 80, 0.45f, COL_TEXT,
+                  T("Sound3DS guardará tu sesión de SoundCloud en la tarjeta SD. Cualquiera que copie la SD podría usar tu cuenta. No compartas la tarjeta y usa Desconectar en Configuración si vas a prestarla o venderla.",
+                    "Sound3DS will store your SoundCloud session on the SD card. Anyone who copies the SD card could use your account. Don't share the card, and use Disconnect in Settings if you lend or sell it."),
+                  284, 18);
+    } else if (m->job.account) {
+        rrect(8, 60, 304, 120, 10, COL_PANEL);
+        text_c(BOT_W / 2, 78, 0.52f, COL_TEXT, T("Qué revisar:", "What to check:"));
+        text_c(BOT_W / 2, 104, 0.45f, COL_DIM, T("Sound3DS Share sigue abierto en el PC", "Sound3DS Share is still open on the PC"));
+        text_c(BOT_W / 2, 124, 0.45f, COL_DIM, T("PC y consola en la misma red Wi-Fi", "PC and console on the same Wi-Fi"));
+        text_c(BOT_W / 2, 144, 0.45f, COL_DIM, T("El QR dura 10 minutos y sirve una vez", "The QR lasts 10 minutes and works once"));
+    } else if (m->item_count > 0) {
         draw_list(m, m->scroll);
     } else {
         rrect(8, 60, 304, 120, 10, COL_PANEL);
