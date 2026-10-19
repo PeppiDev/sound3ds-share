@@ -11,7 +11,8 @@ It's two programs that work together:
 | | Runs on | What it does |
 |---|---|---|
 | **Sound3DS Share** | PC (Linux or Windows) | Browses your files, builds the list by album and generates the QR code |
-| **Sound3DS QR** | 3DS / 2DS / New 3DS | Scans the QR code with the camera and downloads the songs to `sdmc:/music` |
+| **[Sound3DS](https://github.com/PeppiDev/sound3ds)** 0.7 or newer | 3DS / 2DS / New 3DS | In **Settings → Receive from PC** it scans the QR code with the camera and downloads the songs to `sdmc:/music` (or connects your SoundCloud account) |
+| **Sound3DS QR** (optional) | 3DS / 2DS / New 3DS | The older standalone app that does the same; not needed with Sound3DS 0.7 |
 
 <p align="center">
   <img src="docs/share-pc.png" alt="Sound3DS Share: file browser and songs grouped by album" width="760">
@@ -21,7 +22,11 @@ It's two programs that work together:
 
 ## 📥 Installation
 
-### On the console: Sound3DS QR
+### On the console: Sound3DS
+Install **[Sound3DS](https://github.com/PeppiDev/sound3ds)** with the QR code in its repository. Since version 0.7 it has the QR reader built in under **Settings → Receive from PC**, so you don't need anything else.
+
+#### Optional: Sound3DS QR
+If you prefer the standalone app (or use an older version of Sound3DS):
 <p align="center">
   <a href="https://github.com/PeppiDev/sound3ds-share/releases/latest/download/sound3ds-qr.cia">
     <img src="docs/qr-cia.png" alt="QR code to install sound3ds-qr.cia with FBI" width="200">
@@ -32,7 +37,7 @@ On your console, open **FBI → Remote Install → Scan QR Code** and scan the c
 
 You can also download `sound3ds-qr.cia` (or `sound3ds-qr.3dsx` for the Homebrew Launcher) from [Releases](https://github.com/PeppiDev/sound3ds-share/releases/latest).
 
-To listen to the songs you need **[Sound3DS](https://github.com/PeppiDev/sound3ds)**, which installs the same way, with its own QR code.
+You listen to the songs in **Sound3DS > Local**.
 
 ### On the PC: Sound3DS Share
 Download the executable for your system from [Releases](https://github.com/PeppiDev/sound3ds-share/releases/latest):
@@ -70,7 +75,7 @@ EOF
 2. **Browse your folders** on the left. Check songs and click **Add**, or use **+ folder** to add a whole folder (double-clicking a song works too).
 3. **Review the list** on the right. Songs are grouped by album with the cover art and tags they have. Fix whatever you want (see below).
 4. Click **Generate QR**.
-5. **On the console**, open Sound3DS QR and point the outer camera at the QR code, about 20 cm (8 in) away.
+5. **On the console**, open **Sound3DS → Settings → Receive from PC** (or the Sound3DS QR app) and point the outer camera at the QR code, about 20 cm (8 in) away.
 6. The console downloads the songs and the PC shows the progress of each one. When it's done, open them in **Sound3DS > Local**.
 
 <p align="center">
@@ -84,6 +89,22 @@ EOF
   <br>
   <em>Sound3DS QR looking for the code, and after the download</em>
 </p>
+
+---
+
+## ☁️ Connect your SoundCloud account
+
+With your account connected, Sound3DS shows your **likes, playlists and feed** on the console.
+
+1. Click the orange **Connect SoundCloud** button at the top. Read the warning and continue.
+2. SoundCloud's **official sign-in page** opens in a separate window (Edge, Chrome, Chromium or Brave). Log in as usual: email, Google, Apple or two-step verification. **Your password never goes through Sound3DS Share.**
+3. Once you're in, the window closes by itself and a QR code shows up. On the console open **Sound3DS → Settings → Receive from PC** and scan it.
+
+The QR code carries a **single-use** link that expires in 10 minutes; it doesn't carry your session. Sound3DS Share doesn't keep the session on the PC: the browser's temporary profile is deleted when it's done.
+
+**Important:** Sound3DS will store your SoundCloud session on the SD card. Anyone who copies the SD card could use your account. Don't share the card, and use **Disconnect** in Settings if you lend or sell it. This is not an official SoundCloud integration: it uses the same API as their website and could stop working if SoundCloud changes it.
+
+If you have none of those browsers, the gear (Settings) has an advanced option to paste the session by hand.
 
 ---
 
@@ -171,8 +192,12 @@ docs/               images for this README
 
 ---
 
+## 🤖 AI usage
+
+This project was made with AI assistance, and I declare it openly. Most of the code (the PC server and web interface, the Sound3DS QR app and the build scripts) and the documentation were written by **Claude** (Anthropic), used as a programming assistant. The icon and banner were also generated with scripts written by the AI. I decide what each app does, review the results and test every version on the PC and on real consoles.
+
 ## 🙌 Credits
 
 - [quirc](https://github.com/dlbeer/quirc) (ISC) to read QR codes on the console.
-- [mutagen](https://github.com/quodlibet/mutagen), [Pillow](https://python-pillow.org) and [python-qrcode](https://github.com/lincolnloop/python-qrcode) on the PC.
+- [mutagen](https://github.com/quodlibet/mutagen), [Pillow](https://python-pillow.org), [python-qrcode](https://github.com/lincolnloop/python-qrcode) and [certifi](https://github.com/certifi/python-certifi) on the PC.
 - [devkitPro](https://devkitpro.org) (libctru, citro2d, libcurl) for the console app.
