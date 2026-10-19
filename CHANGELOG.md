@@ -8,6 +8,7 @@
 - El QR lleva un enlace de un solo uso (código aleatorio de 128 bits) que vence en 10 minutos; nunca lleva el token.
 - Antes de iniciar sesión se muestra la advertencia de seguridad sobre guardar la sesión en la SD.
 - Opción avanzada, oculta en Configuración, para pegar el token a mano si no hay un navegador compatible.
+- Linux: el ejecutable trae sus propios certificados (certifi) para las conexiones HTTPS con SoundCloud; antes fallaban en distribuciones que no guardan los certificados donde Debian (Fedora, Nobara, Arch...).
 - Las instrucciones indican escanear desde **Sound3DS > Configuración > Recibir desde el PC**, que reemplaza a Sound3DS QR (la app aparte sigue funcionando).
 
 ### Sound3DS QR (consola)

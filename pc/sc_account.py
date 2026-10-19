@@ -148,14 +148,44 @@ def jwt_claims(token):
         return {}
 
 
+# Certificados para HTTPS. El ejecutable de Linux se compila en Debian y su OpenSSL busca
+# los certificados en /usr/lib/ssl, que no existe en Fedora, Nobara, Arch...: sin esto
+# toda petición a SoundCloud falla. Primero los de certifi (van dentro del ejecutable)
+# y si no, los del sistema en las rutas de cada distribución.
+_CA_FILES = ("/etc/ssl/certs/ca-certificates.crt", "/etc/pki/tls/certs/ca-bundle.crt", "/etc/ssl/cert.pem",
+             "/etc/ssl/ca-bundle.pem", "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem")
+_SSL_CTX = None
+
+
+def ssl_context():
+    global _SSL_CTX
+    if _SSL_CTX is None:
+        import ssl
+        ctx = ssl.create_default_context()
+        try:
+            import certifi
+            ctx.load_verify_locations(certifi.where())
+        except Exception:
+            for path in _CA_FILES:
+                if os.path.isfile(path):
+                    try:
+                        ctx.load_verify_locations(path)
+                        break
+                    except Exception:
+                        pass
+        _SSL_CTX = ctx
+    return _SSL_CTX
+
+
 def api_me(token):
     req = urllib.request.Request(f"https://api-v2.soundcloud.com/me?client_id={API_CLIENT_ID}",
                                  headers={"Authorization": f"OAuth {token}", "User-Agent": UA,
                                           "Accept": "application/json"})
     try:
-        with urllib.request.urlopen(req, timeout=20) as r:
+        with urllib.request.urlopen(req, timeout=20, context=ssl_context()) as r:
             return json.loads(r.read())
-    except (urllib.error.URLError, ValueError, OSError):
+    except (urllib.error.URLError, ValueError, OSError) as e:
+        print("SoundCloud /me:", type(e).__name__, getattr(e, "code", "") or getattr(e, "reason", ""), flush=True)
         return None
 
 
