@@ -1,48 +1,51 @@
 # Sound3DS Share 📲🎵
-### Pasa música del PC a tu Nintendo 3DS / 2DS escaneando un QR
 
-**Sound3DS Share** manda canciones desde el PC a la consola por Wi-Fi, sin sacar la tarjeta SD. Eliges las canciones en el PC, revisas sus álbumes y carátulas, y la consola las descarga al escanear un QR. Quedan listas en **[Sound3DS](https://github.com/PeppiDev/sound3ds) > Local**, cada una en su álbum dentro del cover flow.
+**English** | [Español](README.es.md)
 
-Son dos programas que trabajan juntos:
+### Send music from your PC to your Nintendo 3DS / 2DS by scanning a QR code
 
-| | Dónde corre | Qué hace |
+**Sound3DS Share** sends songs from your PC to your console over Wi-Fi, without taking out the SD card. You pick the songs on your PC, check their albums and cover art, and the console downloads them when you scan a QR code. They end up ready in **[Sound3DS](https://github.com/PeppiDev/sound3ds) > Local**, each one in its album in the cover flow.
+
+It's two programs that work together:
+
+| | Runs on | What it does |
 |---|---|---|
-| **Sound3DS Share** | PC (Linux o Windows) | Explora tus archivos, arma la lista por álbum y genera el QR |
-| **Sound3DS QR** | 3DS / 2DS / New 3DS | Escanea el QR con la cámara y descarga las canciones a `sdmc:/music` |
+| **Sound3DS Share** | PC (Linux or Windows) | Browses your files, builds the list by album and generates the QR code |
+| **Sound3DS QR** | 3DS / 2DS / New 3DS | Scans the QR code with the camera and downloads the songs to `sdmc:/music` |
 
 <p align="center">
-  <img src="docs/share-pc.png" alt="Sound3DS Share: explorador de archivos y canciones agrupadas por álbum" width="760">
+  <img src="docs/share-pc.png" alt="Sound3DS Share: file browser and songs grouped by album" width="760">
 </p>
 
 ---
 
-## 📥 Instalación
+## 📥 Installation
 
-### En la consola: Sound3DS QR
+### On the console: Sound3DS QR
 <p align="center">
   <a href="https://github.com/PeppiDev/sound3ds-share/releases/latest/download/sound3ds-qr.cia">
-    <img src="docs/qr-cia.png" alt="QR para instalar sound3ds-qr.cia con FBI" width="200">
+    <img src="docs/qr-cia.png" alt="QR code to install sound3ds-qr.cia with FBI" width="200">
   </a>
 </p>
 
-En la consola abre **FBI → Remote Install → Scan QR Code** y escanea el código: instala el `.cia` de la última versión. Al terminar, Sound3DS QR aparece en el menú HOME. Requiere una consola con CFW (Luma3DS) y conexión Wi-Fi.
+On your console, open **FBI → Remote Install → Scan QR Code** and scan the code: it installs the `.cia` of the latest release. When it finishes, Sound3DS QR shows up on the HOME menu. Requires a console with CFW (Luma3DS) and Wi-Fi.
 
-También puedes bajar `sound3ds-qr.cia` (o `sound3ds-qr.3dsx` para el Homebrew Launcher) desde [Releases](https://github.com/PeppiDev/sound3ds-share/releases/latest).
+You can also download `sound3ds-qr.cia` (or `sound3ds-qr.3dsx` for the Homebrew Launcher) from [Releases](https://github.com/PeppiDev/sound3ds-share/releases/latest).
 
-Para escuchar las canciones necesitas **[Sound3DS](https://github.com/PeppiDev/sound3ds)**, que se instala igual, con su propio QR.
+To listen to the songs you need **[Sound3DS](https://github.com/PeppiDev/sound3ds)**, which installs the same way, with its own QR code.
 
-### En el PC: Sound3DS Share
-Baja el ejecutable de tu sistema desde [Releases](https://github.com/PeppiDev/sound3ds-share/releases/latest):
+### On the PC: Sound3DS Share
+Download the executable for your system from [Releases](https://github.com/PeppiDev/sound3ds-share/releases/latest):
 
-| Sistema | Archivo | Cómo abrirlo |
+| System | File | How to open it |
 |---|---|---|
-| **Windows 10 / 11** | `Sound3DS-Share.exe` | Doble clic. La primera vez Windows pregunta por el firewall: marca **Redes privadas** y toca **Permitir**, si no la consola no podrá conectarse. Si aparece SmartScreen ("Windows protegió su PC"), toca **Más información → Ejecutar de todas formas**. |
-| **Linux** | `Sound3DS-Share` | Dale permiso de ejecución (`chmod +x Sound3DS-Share` o Propiedades → Permisos → "Permitir ejecutar") y ábrelo. Funciona en casi cualquier distro de los últimos años: Ubuntu 20.04+, Debian 11+, Fedora, Arch, Mint, openSUSE, Pop!_OS... |
+| **Windows 10 / 11** | `Sound3DS-Share.exe` | Double-click it. The first time, Windows asks about the firewall: check **Private networks** and click **Allow access**, otherwise the console won't be able to connect. If SmartScreen shows up ("Windows protected your PC"), click **More info → Run anyway**. |
+| **Linux** | `Sound3DS-Share` | Make it executable (`chmod +x Sound3DS-Share` or Properties → Permissions → "Allow executing") and open it. Works on almost any recent distro: Ubuntu 20.04+, Debian 11+, Fedora, Arch, Mint, openSUSE, Pop!_OS... |
 
-No hay que instalar nada más. La interfaz se abre como ventana propia si tienes Edge, Chrome, Chromium o Brave (Windows siempre trae Edge); si no, se abre en tu navegador predeterminado.
+Nothing else to install. The interface opens as its own window if you have Edge, Chrome, Chromium or Brave (Windows always ships Edge); otherwise it opens in your default browser.
 
 <details>
-<summary>Linux: agregarla al menú de aplicaciones (opcional)</summary>
+<summary>Linux: add it to your application menu (optional)</summary>
 
 ```bash
 install -Dm755 Sound3DS-Share ~/.local/bin/Sound3DS-Share
@@ -50,7 +53,7 @@ cat > ~/.local/share/applications/sound3ds-share.desktop <<EOF
 [Desktop Entry]
 Type=Application
 Name=Sound3DS Share
-Comment=Envía canciones a la consola con Sound3DS QR
+Comment=Send songs to your console with Sound3DS QR
 Exec=$HOME/.local/bin/Sound3DS-Share %F
 Icon=audio-x-generic
 Terminal=false
@@ -61,115 +64,115 @@ EOF
 
 ---
 
-## 🚀 Cómo se usa
+## 🚀 How to use it
 
-1. **En el PC**, abre Sound3DS Share.
-2. **Explora tus carpetas** a la izquierda. Marca canciones y toca **Agregar**, o usa **+ carpeta** para agregar una carpeta entera (también sirve doble clic sobre una canción).
-3. **Revisa la lista** de la derecha. Las canciones se agrupan por álbum con la carátula y las etiquetas que traen. Corrige lo que quieras (ver más abajo).
-4. Toca **Generar QR**.
-5. **En la consola**, abre Sound3DS QR y apunta la cámara de afuera al QR, a unos 20 cm.
-6. La consola descarga las canciones y el PC muestra el avance de cada una. Al terminar, ábrelas en **Sound3DS > Local**.
+1. **On the PC**, open Sound3DS Share.
+2. **Browse your folders** on the left. Check songs and click **Add**, or use **+ folder** to add a whole folder (double-clicking a song works too).
+3. **Review the list** on the right. Songs are grouped by album with the cover art and tags they have. Fix whatever you want (see below).
+4. Click **Generate QR**.
+5. **On the console**, open Sound3DS QR and point the outer camera at the QR code, about 20 cm (8 in) away.
+6. The console downloads the songs and the PC shows the progress of each one. When it's done, open them in **Sound3DS > Local**.
 
 <p align="center">
-  <img src="docs/share-qr.png" alt="QR generado y avance de la descarga en el PC" width="620">
+  <img src="docs/share-qr.png" alt="Generated QR code and download progress on the PC" width="620">
 </p>
 
 <p align="center">
-  <img src="docs/qr-scan.png" alt="Sound3DS QR buscando el código" width="300">
+  <img src="docs/qr-scan.png" alt="Sound3DS QR looking for the code" width="300">
   &nbsp;
-  <img src="docs/qr-done.png" alt="Sound3DS QR con las 9 canciones descargadas" width="300">
+  <img src="docs/qr-done.png" alt="Sound3DS QR with the 9 songs downloaded" width="300">
   <br>
-  <em>Sound3DS QR buscando el código y al terminar la descarga</em>
+  <em>Sound3DS QR looking for the code, and after the download</em>
 </p>
 
 ---
 
-## 💿 Álbumes, carátulas y etiquetas
+## 💿 Albums, cover art and tags
 
-Sound3DS ordena tu música local por la **etiqueta de álbum** de cada canción, no por carpetas. Sound3DS Share te deja dejarlo bien antes de enviar.
+Sound3DS sorts your local music by each song's **album tag**, not by folders. Sound3DS Share lets you get that right before sending.
 
-**Se detecta solo:**
-- Título, artista, álbum, artista del álbum y número de pista desde las etiquetas ID3.
-- La carátula incrustada en la canción. Si no trae, se usa `cover.jpg`, `folder.jpg` o `front.jpg` de su carpeta.
-- Si falta el título o el artista, se toman del nombre del archivo (`01. Artista - Título.mp3`).
+**Detected automatically:**
+- Title, artist, album, album artist and track number from the ID3 tags.
+- The cover art embedded in the song. If it has none, `cover.jpg`, `folder.jpg` or `front.jpg` from its folder is used.
+- If the title or artist is missing, they're taken from the file name (`01. Artist - Title.mp3`).
 
-**Puedes cambiar:**
-- **Nombre del álbum** y **artista del álbum**: se aplica a todas las canciones del álbum. Si escribes el nombre de otro álbum de la lista, se juntan.
-- **Número, título y artista** de cada canción, directamente en la tabla.
-- **Mover a**: pasa una canción a otro álbum de la lista o a uno nuevo.
-- **Carátula**: toca el recuadro para elegir una imagen (JPG o PNG). Si un álbum no tiene carátula, el recuadro sale naranja. Si sus canciones traen carátulas distintas, toca el aviso **unificar** para usar la principal en todas.
+**You can change:**
+- **Album name** and **album artist**: applied to every song in the album. If you type the name of another album in the list, they're merged.
+- **Track number, title and artist** of each song, right in the table.
+- **Move to**: moves a song to another album in the list or to a new one.
+- **Cover art**: click the square to pick an image (JPG or PNG). If an album has no cover, the square is shown in orange. If its songs have different covers, click the **unify** badge to use the main one for all of them.
 
-Las canciones del PC **no se modifican**. Al enviarlas se les pone una etiqueta nueva con lo que ves en pantalla y la carátula reducida a 500 px, el tamaño que mejor maneja la consola. En la consola se guardan como `Artista - Título.mp3`.
+Your songs on the PC are **not modified**. When they're sent, they get a new tag with what you see on screen and the cover art scaled down to 500 px, the size the console handles best. On the console they're saved as `Artist - Title.mp3`.
 
-Se pueden enviar archivos `.mp3` y `.aac`, que son los que reproduce Sound3DS.
-
----
-
-## 🎮 Sound3DS QR en la consola
-
-- La imagen de la cámara se ve en la pantalla de arriba con un visor. Al reconocer el código, las esquinas se ponen verdes.
-- Mientras descarga, arriba se ve el avance total, la canción actual, MB y velocidad. Abajo, la lista con el estado de cada canción.
-- **(B)**: cancela la descarga. **HOME** funciona mientras descarga y cerrar la tapa no la corta.
-- **(A)**: escanea otro QR al terminar. **START**: sale.
-- Las canciones que ya estaban en la SD se saltan.
-- Usa el mismo idioma que elegiste en Sound3DS (inglés o español).
-
-El QR también puede ser directamente la URL de un `.mp3`/`.aac`, o la de una lista de texto con una URL por línea.
+You can send `.mp3` and `.aac` files, which are the formats Sound3DS plays.
 
 ---
 
-## 🛠️ Problemas comunes
+## 🎮 Sound3DS QR on the console
 
-| Problema | Qué revisar |
+- The camera image is shown on the top screen with a viewfinder. When the code is recognized, the corners turn green.
+- While downloading, the top screen shows the overall progress, the current song, MB and speed. The bottom screen shows the list with the status of each song.
+- **(B)**: cancels the download. **HOME** works while downloading, and closing the lid doesn't interrupt it.
+- **(A)**: scan another QR code when it's done. **START**: exit.
+- Songs that are already on the SD card are skipped.
+- It uses the same language you picked in Sound3DS (English or Spanish).
+
+The QR code can also be the URL of a single `.mp3`/`.aac`, or of a text list with one URL per line.
+
+---
+
+## 🛠️ Troubleshooting
+
+| Problem | What to check |
 |---|---|
-| La consola lee el QR pero no descarga | Que el PC y la consola estén en la **misma red Wi-Fi** y que el firewall permita Sound3DS Share (en Windows, "Redes privadas"). Algunos routers de invitados aíslan los dispositivos entre sí. |
-| El PC tiene varias redes (VPN, Tailscale, cable + Wi-Fi) | Arriba, junto al interruptor del servicio, elige la dirección IP de la red de tu casa y genera el QR de nuevo. |
-| La cámara no reconoce el código | Acércate o aléjate un poco, evita reflejos en la pantalla del PC y sube el brillo. |
-| No aparece la ventana | La app abre tu navegador en `http://127.0.0.1:8764`. Puedes abrir esa dirección a mano. |
+| The console reads the QR code but doesn't download | That the PC and the console are on the **same Wi-Fi network** and that the firewall allows Sound3DS Share (on Windows, "Private networks"). Some guest networks isolate devices from each other. |
+| The PC has several networks (VPN, Tailscale, cable + Wi-Fi) | At the top, next to the service switch, pick your home network's IP address and generate the QR code again. |
+| The camera doesn't recognize the code | Move a bit closer or farther, avoid reflections on the PC screen and turn up the brightness. |
+| The window doesn't show up | The app opens your browser at `http://127.0.0.1:8764`. You can open that address by hand. |
 
-**Puertos:** la interfaz usa `127.0.0.1:8764` y solo es accesible desde tu PC, porque permite explorar tus archivos. La consola se conecta al puerto `8765` (o al siguiente libre), que solo entrega las canciones de la lista.
+**Ports:** the interface uses `127.0.0.1:8764` and is only reachable from your PC, since it can browse your files. The console connects to port `8765` (or the next free one), which only serves the songs in the list.
 
 ---
 
-## 🔧 Compilación
+## 🔧 Building
 
 ### PC
-Desde el código, con Python 3.9 o más nuevo:
+From source, with Python 3.9 or newer:
 ```bash
 cd pc
 pip install -r requirements.txt
 python3 sound3ds_share.py
 ```
 
-Ejecutables (requieren `podman`):
+Executables (require `podman`):
 ```bash
-./pc/build_linux.sh     # pc/dist/linux/Sound3DS-Share (compilado sobre Debian 11, glibc 2.31)
-./pc/build_windows.sh   # pc/dist/windows/Sound3DS-Share.exe (Python para Windows bajo Wine)
+./pc/build_linux.sh     # pc/dist/linux/Sound3DS-Share (built on Debian 11, glibc 2.31)
+./pc/build_windows.sh   # pc/dist/windows/Sound3DS-Share.exe (Windows Python under Wine)
 ```
 
-### Consola
-Con la imagen de devkitARM en `podman`:
+### Console
+With the devkitARM image on `podman`:
 ```bash
 ./3ds/build.sh          # 3ds/sound3ds-qr.3dsx
-./3ds/build_cia.sh      # 3ds/sound3ds-qr.cia (requiere makerom y bannertool)
+./3ds/build_cia.sh      # 3ds/sound3ds-qr.cia (requires makerom and bannertool)
 ```
-`build_cia.sh` busca las herramientas en `~/.local/share/3ds-tools`. Puedes cambiar la ruta con `CTR_TOOLS_DIR`, o indicar cada una con `MAKEROM` y `BANNERTOOL`.
+`build_cia.sh` looks for the tools in `~/.local/share/3ds-tools`. You can change the path with `CTR_TOOLS_DIR`, or point to each one with `MAKEROM` and `BANNERTOOL`.
 
-### Estructura
+### Layout
 ```
-pc/                 Sound3DS Share (Python: servidor + interfaz web en pc/web)
+pc/                 Sound3DS Share (Python: server + web interface in pc/web)
 3ds/                Sound3DS QR (C, libctru + citro2d)
-  source/camera.c   captura continua de la cámara en su propio hilo
-  source/job.c      lectura de la lista y descargas con libcurl
-  source/ui.c       interfaz de ambas pantallas
-  source/quirc/     decodificador de QR (licencia ISC)
-docs/               imágenes de este README
+  source/camera.c   continuous camera capture on its own thread
+  source/job.c      list reading and downloads with libcurl
+  source/ui.c       interface for both screens
+  source/quirc/     QR decoder (ISC license)
+docs/               images for this README
 ```
 
 ---
 
-## 🙌 Créditos
+## 🙌 Credits
 
-- [quirc](https://github.com/dlbeer/quirc) (ISC) para leer los códigos QR en la consola.
-- [mutagen](https://github.com/quodlibet/mutagen), [Pillow](https://python-pillow.org) y [python-qrcode](https://github.com/lincolnloop/python-qrcode) en el PC.
-- [devkitPro](https://devkitpro.org) (libctru, citro2d, libcurl) para la app de la consola.
+- [quirc](https://github.com/dlbeer/quirc) (ISC) to read QR codes on the console.
+- [mutagen](https://github.com/quodlibet/mutagen), [Pillow](https://python-pillow.org) and [python-qrcode](https://github.com/lincolnloop/python-qrcode) on the PC.
+- [devkitPro](https://devkitpro.org) (libctru, citro2d, libcurl) for the console app.
