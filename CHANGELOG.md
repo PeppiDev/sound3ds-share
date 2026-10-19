@@ -1,6 +1,6 @@
 # Historial de cambios
 
-## [Sin publicar]
+## [1.1.0] - 2026-10-19
 
 ### Sound3DS Share (PC)
 - **Conectar SoundCloud**: botón en la barra superior. Abre la página oficial de inicio de sesión en una ventana aparte (Edge, Chrome, Chromium o Brave con un perfil temporal), detecta solo cuando el usuario entra (con Google, Apple o verificación en dos pasos) y muestra un QR para la consola. La contraseña nunca pasa por la app.

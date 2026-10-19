@@ -5,7 +5,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOOLS_DIR="${CTR_TOOLS_DIR:-$HOME/.local/share/3ds-tools}"
 MAKEROM="${MAKEROM:-$TOOLS_DIR/makerom/makerom}"
 BANNERTOOL="${BANNERTOOL:-$TOOLS_DIR/bannertool/linux-x86_64/bannertool}"
-VERSION="${VERSION:-1.0.0}"
+VERSION="${VERSION:-1.1.0}"
 IFS=. read -r V_MAJOR V_MINOR V_MICRO <<< "$VERSION"
 
 "$DIR/build.sh"

@@ -41,7 +41,7 @@ except ImportError:  # sin Pillow las carátulas se envían tal cual
     HAVE_PIL = False
 
 APP_NAME = "Sound3DS Share"
-VERSION = "1.1.0-beta"
+VERSION = "1.1.0"
 UI_PORT = 8764
 SHARE_PORT = 8765
 AUDIO_EXT = (".mp3", ".aac")
