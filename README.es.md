@@ -201,3 +201,7 @@ Este proyecto se hizo con ayuda de IA (Claude).
 - [quirc](https://github.com/dlbeer/quirc) (ISC) para leer los códigos QR en la consola.
 - [mutagen](https://github.com/quodlibet/mutagen), [Pillow](https://python-pillow.org), [python-qrcode](https://github.com/lincolnloop/python-qrcode) y [certifi](https://github.com/certifi/python-certifi) en el PC.
 - [devkitPro](https://devkitpro.org) (libctru, citro2d, libcurl) para la app de la consola.
+
+## 📄 Licencia
+
+Sound3DS Share y Sound3DS QR se publican bajo la [licencia MIT](LICENSE). quirc (en `3ds/source/quirc/`) mantiene su licencia ISC.

@@ -201,3 +201,7 @@ This project was built with AI assistance (Claude).
 - [quirc](https://github.com/dlbeer/quirc) (ISC) to read QR codes on the console.
 - [mutagen](https://github.com/quodlibet/mutagen), [Pillow](https://python-pillow.org), [python-qrcode](https://github.com/lincolnloop/python-qrcode) and [certifi](https://github.com/certifi/python-certifi) on the PC.
 - [devkitPro](https://devkitpro.org) (libctru, citro2d, libcurl) for the console app.
+
+## 📄 License
+
+Sound3DS Share and Sound3DS QR are released under the [MIT License](LICENSE). quirc (in `3ds/source/quirc/`) keeps its ISC license.
