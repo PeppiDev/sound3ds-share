@@ -1,3 +1,17 @@
+> [!WARNING]
+> **Rama `development`: Sound3DS Share 1.1.0 beta para testers.** Puede tener errores; la versión estable está en la rama `main`.
+> **`development` branch: Sound3DS Share 1.1.0 beta for testers.** It may have bugs; the stable version is on the `main` branch.
+
+**Descargar la beta:** [pre-release v1.1.0-beta.1](https://github.com/PeppiDev/sound3ds-share/releases/tag/v1.1.0-beta.1)
+- Windows 10/11: [`Sound3DS-Share.exe`](https://github.com/PeppiDev/sound3ds-share/releases/download/v1.1.0-beta.1/Sound3DS-Share.exe)
+- Linux: [`Sound3DS-Share`](https://github.com/PeppiDev/sound3ds-share/releases/download/v1.1.0-beta.1/Sound3DS-Share) (dale permiso de ejecución)
+
+Va con **Sound3DS 0.7.0 beta** en la consola: [rama development de Sound3DS](https://github.com/PeppiDev/sound3ds/tree/development) (ahí está el QR para instalarla).
+Novedades: botón **Conectar SoundCloud** para usar tu cuenta en la consola, y se escanea desde **Sound3DS → Configuración → Recibir desde el PC**.
+**Si algo falla:** anota tu sistema (Windows/Linux) y qué hacías.
+
+---
+
 # Sound3DS Share 📲🎵
 
 **English** | [Español](README.es.md)
