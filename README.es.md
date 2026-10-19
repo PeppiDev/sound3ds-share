@@ -194,7 +194,7 @@ docs/               imágenes de este README
 
 ## 🤖 Uso de IA
 
-Este proyecto se hizo con ayuda de IA y lo declaro abiertamente. La mayor parte del código (el servidor y la interfaz web del PC, la app Sound3DS QR y los scripts de compilación) y la documentación la escribió **Claude** (Anthropic), usado como asistente de programación. El ícono y el banner también se generaron con scripts escritos por la IA. Yo decido qué hace cada app, reviso los resultados y pruebo cada versión en el PC y en consolas reales.
+Este proyecto se hizo con ayuda de IA (Claude).
 
 ## 🙌 Créditos
 

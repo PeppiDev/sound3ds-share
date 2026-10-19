@@ -194,7 +194,7 @@ docs/               images for this README
 
 ## 🤖 AI usage
 
-This project was made with AI assistance, and I declare it openly. Most of the code (the PC server and web interface, the Sound3DS QR app and the build scripts) and the documentation were written by **Claude** (Anthropic), used as a programming assistant. The icon and banner were also generated with scripts written by the AI. I decide what each app does, review the results and test every version on the PC and on real consoles.
+This project was built with AI assistance (Claude).
 
 ## 🙌 Credits
 
