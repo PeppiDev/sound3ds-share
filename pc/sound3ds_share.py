@@ -31,6 +31,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from mutagen.id3 import APIC, ID3, TALB, TIT2, TPE1, TPE2, TRCK
 from sc_account import ACCOUNT
+from subsonic_link import SERVER
 import qrcode
 import qrcode.image.svg
 
@@ -413,10 +414,10 @@ class ConsoleHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = urllib.parse.urlsplit(self.path).path
         SHARE.last_activity = time.time()
-        # Cuenta de SoundCloud: el enlace del QR responde una sola vez
-        m = re.match(r"^/account/([A-Za-z0-9_-]{16,64})$", path)
+        # Cuenta de SoundCloud o servidor propio: el enlace del QR responde una sola vez
+        m = re.match(r"^/(account|server)/([A-Za-z0-9_-]{16,64})$", path)
         if m:
-            body = ACCOUNT.take(m.group(1))
+            body = (ACCOUNT if m.group(1) == "account" else SERVER).take(m.group(2))
             if body is None:
                 self.send_error(404)
                 return
@@ -558,6 +559,14 @@ class UIHandler(BaseHTTPRequestHandler):
             self._json({"on": SHARE.on, "ip": SHARE.ip, "ips": lan_ips(), "port": SHARE.port,
                         "url": SHARE.url(), "error": SHARE.error, "items": items, "list_reads": reads,
                         "version": VERSION})
+        elif u.path == "/api/srv/state":
+            st = SERVER.status()
+            if st["state"] == "ready":
+                if not SHARE.start():
+                    st["error"] = "port"
+                st["svg"] = qr_svg(f"http://{SHARE.ip}:{SHARE.port}/server/{st['code']}")
+            st.pop("code", None)
+            self._json(st)
         elif u.path == "/api/sc/state":
             st = ACCOUNT.status()
             if st["state"] == "ready":
@@ -608,6 +617,14 @@ class UIHandler(BaseHTTPRequestHandler):
             data = json.loads(self._body() or b"{}")
             ACCOUNT.manual(data.get("token", ""), data.get("refresh", ""))
             self._json(ACCOUNT.status() | {"code": None})
+        elif u.path == "/api/srv/connect":
+            data = json.loads(self._body() or b"{}")
+            st = SERVER.connect(data.get("url", ""), data.get("user", ""), data.get("password", ""), SHARE.ip)
+            st.pop("code", None)
+            self._json(st)
+        elif u.path == "/api/srv/cancel":
+            SERVER.cancel()
+            self._json({"state": "idle"})
         elif u.path == "/api/sc/cancel":
             ACCOUNT.cancel()
             self._json(ACCOUNT.status() | {"code": None})

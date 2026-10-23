@@ -157,6 +157,9 @@ button.badge:hover { filter: brightness(1.25); }
   font-size: 13px; background: rgba(255,119,0,.14); color: #ffa24d; border: 1px solid rgba(255,119,0,.45); }
 .scbtn:hover { background: rgba(255,119,0,.24); }
 .scbtn.connected { background: rgba(80,214,128,.12); color: var(--ok); border-color: rgba(80,214,128,.4); }
+.srvbtn { background: rgba(52,152,219,.14); color: #7cc0ef; border-color: rgba(52,152,219,.45); }
+.srvbtn:hover { background: rgba(52,152,219,.24); }
+.field input[type=password], .field input.plain { font-family: inherit; font-size: 13px; }
 .sheet.narrow { grid-template-columns: 1fr; width: min(540px, 94vw); }
 .sheet.narrow .steps { padding: 26px 28px; }
 .warnbox { background: rgba(255,184,72,.10); border: 1px solid rgba(255,184,72,.35); color: #ffd28f; border-radius: 10px; padding: 12px 14px; }
@@ -183,6 +186,7 @@ details.adv[open] summary { color: var(--text); margin-bottom: 10px; }
     Sound3DS Share <small id="ver"></small>
   </div>
   <div class="spacer"></div>
+  <button class="scbtn srvbtn" id="srvBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="5" rx="1.5"/><rect x="3" y="9.5" width="18" height="5" rx="1.5"/><rect x="3" y="16" width="18" height="5" rx="1.5"/></svg><span id="srvBtnText"></span></button>
   <button class="scbtn" id="scBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 10a5.5 5.5 0 0 0-10.6-2A4.5 4.5 0 0 0 7.5 17h10a3.5 3.5 0 0 0 0-7z"/></svg><span id="scBtnText"></span></button>
   <div class="service" id="service">
     <span class="dot"></span>
@@ -260,6 +264,11 @@ details.adv[open] summary { color: var(--text); margin-bottom: 10px; }
     <div class="steps" id="scBody"></div>
   </div>
 </div>
+<div class="modal" id="srvModal">
+  <div class="sheet narrow">
+    <div class="steps" id="srvBody"></div>
+  </div>
+</div>
 <div class="modal" id="setModal">
   <div class="sheet narrow">
     <div class="steps">
@@ -312,6 +321,20 @@ const I18N = {
     total: (n, mb) => `${n} canción${n == 1 ? "" : "es"} · ${mb}`, closed: "Sound3DS Share se cerró. Puedes cerrar esta ventana.",
     confirmQuit: "La consola todavía está descargando. ¿Cerrar igual?",
     scConnect: "Conectar SoundCloud", scConnected: n => `SoundCloud: ${n}`, settings: "Configuración", close: "Cerrar",
+    srvConnect: "Conectar servidor", srvConnected: n => `Servidor: ${n}`,
+    srvTitle: "Conectar tu servidor de música",
+    srvIntro: "Navidrome, Airsonic, Gonic u otro servidor compatible con Subsonic. Tu contraseña no sale de este PC: la consola recibe solo un token de acceso.",
+    srvUrl: "Dirección del servidor", srvUser: "Usuario", srvPass: "Contraseña", srvTest: "Probar y conectar",
+    srvChecking: "Probando la conexión con el servidor…",
+    srvReady: n => `Servidor listo: <b>${n}</b>`,
+    srvDelivered: n => `La consola quedó conectada a <b>${n}</b>.`,
+    srvDeliveredHint: "Ábrelo desde la tarjeta Servidor del menú de Sound3DS.",
+    srvErr: { fields: "Completa la dirección, el usuario y la contraseña.",
+              net: "No se pudo conectar con esa dirección. Revisa que el servidor esté encendido y que la dirección lleve el puerto (por ejemplo :4533).",
+              auth: "El servidor rechazó el usuario o la contraseña.",
+              notsubsonic: "Esa dirección no responde como un servidor Subsonic o Navidrome.",
+              expired: "El código venció sin que la consola lo escaneara.",
+              port: "No se pudo abrir el servicio en la red local." },
     cancel: "Cancelar", continue: "Continuar", retry: "Reintentar", done: "Listo",
     scTitle: "Conectar tu cuenta de SoundCloud",
     scIntro: "Sound3DS podrá mostrar tus likes, tus playlists y las canciones de quienes sigues. Inicias sesión en la página oficial de SoundCloud: tu contraseña nunca pasa por esta app.",
@@ -360,6 +383,20 @@ const I18N = {
     total: (n, mb) => `${n} song${n == 1 ? "" : "s"} · ${mb}`, closed: "Sound3DS Share has closed. You can close this window.",
     confirmQuit: "The console is still downloading. Close anyway?",
     scConnect: "Connect SoundCloud", scConnected: n => `SoundCloud: ${n}`, settings: "Settings", close: "Close",
+    srvConnect: "Connect server", srvConnected: n => `Server: ${n}`,
+    srvTitle: "Connect your music server",
+    srvIntro: "Navidrome, Airsonic, Gonic or any other Subsonic-compatible server. Your password never leaves this PC: the console only gets an access token.",
+    srvUrl: "Server address", srvUser: "User", srvPass: "Password", srvTest: "Test and connect",
+    srvChecking: "Testing the connection to the server…",
+    srvReady: n => `Server ready: <b>${n}</b>`,
+    srvDelivered: n => `Your console is now connected to <b>${n}</b>.`,
+    srvDeliveredHint: "Open it from the Server card in Sound3DS's menu.",
+    srvErr: { fields: "Fill in the address, the user and the password.",
+              net: "Couldn't reach that address. Check that the server is on and that the address includes the port (for example :4533).",
+              auth: "The server rejected the user or password.",
+              notsubsonic: "That address doesn't answer like a Subsonic or Navidrome server.",
+              expired: "The code expired before the console scanned it.",
+              port: "Couldn't open the service on the local network." },
     cancel: "Cancel", continue: "Continue", retry: "Try again", done: "Done",
     scTitle: "Connect your SoundCloud account",
     scIntro: "Sound3DS will be able to show your likes, your playlists and tracks from people you follow. You sign in on SoundCloud's official page: your password never goes through this app.",
@@ -734,7 +771,7 @@ function renderProgress() {
 $("#langBtn").onclick = () => {
   lang = lang === "es" ? "en" : "es";
   localStorage.setItem("lang", lang);
-  applyI18n(); renderFiles(); renderAlbums(); poll(); scPoll();
+  applyI18n(); renderFiles(); renderAlbums(); poll(); scPoll(); srvPoll();
   if ($("#scModal").classList.contains("show")) scRender();
   loadPlaces();
 };
@@ -799,6 +836,63 @@ $("#scBody").addEventListener("click", async e => {
   else if (a === "cancel") { sc = await post("/api/sc/cancel", {}); scStep = "intro"; $("#scModal").classList.remove("show"); }
   else if (a === "close") { $("#scModal").classList.remove("show"); clearInterval(scTimer); scTimer = setInterval(scPoll, 5000); }
 });
+// ---------------------------------------------------------------- Servidor propio (Subsonic)
+let srv = { state: "idle" }, srvBusy = false, srvTimer = null, srvForm = { url: "", user: "" };
+const ICON_SRV = '<svg width="30" height="30" viewBox="0 0 24 24" fill="#3498db"><rect x="3" y="3" width="18" height="5" rx="1.5"/><rect x="3" y="9.5" width="18" height="5" rx="1.5"/><rect x="3" y="16" width="18" height="5" rx="1.5"/></svg>';
+function srvRender() {
+  const b = $("#srvBody");
+  const err = srv.state === "error" ? (I18N[lang].srvErr[srv.error] || srv.error) : "";
+  if (srvBusy) {
+    b.innerHTML = `<h2>${ICON_SRV} ${t("srvTitle")}</h2><div style="display:flex;gap:16px;align-items:center"><div class="bigspin"></div>
+      <div>${t("srvChecking")}</div></div>`;
+  } else if (srv.state === "ready") {
+    b.innerHTML = `<h2>${ICON_SRV} ${t("srvReady", esc(srv.label))}</h2><div class="sc-qr"><div class="qrbox">${srv.svg || ""}</div>
+      <div><p>${t("scScan")}</p><div class="status"><span class="pulse"></span><span>${t("waiting")}</span></div>
+      <p class="hint">${t("scExpires", Math.ceil(srv.expires_in / 60))}</p></div></div>
+      <div class="hint">${t("sameWifi")}</div><div class="sheet-foot"><button class="btn" data-srv="cancel">${t("cancel")}</button></div>`;
+  } else if (srv.state === "delivered") {
+    b.innerHTML = `<h2>${ICON_SRV} ${t("done")}</h2><div class="status ok"><span class="pulse"></span><span>${t("srvDelivered", esc(srv.label))}</span></div>
+      <p class="hint">${t("srvDeliveredHint")}</p><div class="sheet-foot"><button class="btn primary" data-srv="close">${t("close")}</button></div>`;
+  } else {
+    b.innerHTML = `<h2>${ICON_SRV} ${t("srvTitle")}</h2><p class="hint" style="font-size:13px">${t("srvIntro")}</p>
+      ${err ? `<div class="warnbox">${err}</div>` : ""}
+      <div class="field"><label>${t("srvUrl")}</label><input type="text" class="plain" id="srvUrl" placeholder="http://192.168.1.10:4533" value="${esc(srvForm.url)}" autocomplete="off" spellcheck="false"></div>
+      <div class="field"><label>${t("srvUser")}</label><input type="text" class="plain" id="srvUser" value="${esc(srvForm.user)}" autocomplete="off" spellcheck="false"></div>
+      <div class="field"><label>${t("srvPass")}</label><input type="password" id="srvPass" autocomplete="off"></div>
+      <div class="sheet-foot"><button class="btn" data-srv="close">${t("cancel")}</button><button class="btn primary" data-srv="connect">${t("srvTest")}</button></div>`;
+  }
+}
+async function srvPoll() {
+  try { srv = await api("/api/srv/state"); } catch { return; }
+  $("#srvBtn").classList.toggle("connected", srv.state === "delivered");
+  $("#srvBtnText").textContent = srv.state === "delivered" ? t("srvConnected", srv.label) : t("srvConnect");
+  if ($("#srvModal").classList.contains("show") && !srvBusy && (srv.state === "ready" || srv.state === "delivered")) srvRender();
+}
+$("#srvBtn").onclick = () => {
+  if (srv.state === "delivered" || srv.state === "error") srv = { state: "idle" };
+  $("#srvModal").classList.add("show");
+  srvRender();
+  clearInterval(srvTimer);
+  srvTimer = setInterval(srvPoll, 1000);
+};
+$("#srvBody").addEventListener("click", async e => {
+  const a = e.target.closest("[data-srv]")?.dataset.srv;
+  if (a === "connect") {
+    srvForm = { url: $("#srvUrl").value.trim(), user: $("#srvUser").value.trim() };
+    const password = $("#srvPass").value;
+    srvBusy = true; srvRender();
+    try { srv = await post("/api/srv/connect", { ...srvForm, password }); } catch { srv = { state: "error", error: "net" }; }
+    srvBusy = false;
+    if (srv.state === "ready") await srvPoll();
+    srvRender();
+  } else if (a === "cancel") {
+    await post("/api/srv/cancel", {}); srv = { state: "idle" }; srvRender();
+  } else if (a === "close") {
+    $("#srvModal").classList.remove("show"); clearInterval(srvTimer); srvTimer = setInterval(srvPoll, 5000);
+  }
+});
+$("#srvBody").addEventListener("keydown", e => { if (e.key === "Enter") $("[data-srv=connect]")?.click(); });
+
 $("#setBtn").onclick = () => $("#setModal").classList.add("show");
 $("#setClose").onclick = () => $("#setModal").classList.remove("show");
 $("#manBtn").onclick = async () => {
@@ -818,6 +912,8 @@ $("#manBtn").onclick = async () => {
   applyI18n();
   scPoll();
   scTimer = setInterval(scPoll, 5000);
+  srvPoll();
+  srvTimer = setInterval(srvPoll, 5000);
   const start = await loadPlaces();
   await openDir(start).catch(() => openDir(""));
   try {
