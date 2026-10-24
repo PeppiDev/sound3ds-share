@@ -11,7 +11,7 @@ It's two programs that work together:
 | | Runs on | What it does |
 |---|---|---|
 | **Sound3DS Share** | PC (Linux or Windows) | Browses your files, builds the list by album and generates the QR code |
-| **[Sound3DS](https://github.com/PeppiDev/sound3ds)** 0.7 or newer | 3DS / 2DS / New 3DS | In **Settings → Receive from PC** it scans the QR code with the camera and downloads the songs to `sdmc:/music` (or connects your SoundCloud account) |
+| **[Sound3DS](https://github.com/PeppiDev/sound3ds)** 0.7 or newer | 3DS / 2DS / New 3DS | In **Settings → Receive from PC** it scans the QR code with the camera and downloads the songs to `sdmc:/music` (or connects your SoundCloud account, your own server or Bandcamp) |
 | **Sound3DS QR** (optional) | 3DS / 2DS / New 3DS | The older standalone app that does the same; not needed with Sound3DS 0.7 |
 
 <p align="center">
@@ -106,6 +106,20 @@ The QR code carries a **single-use** link that expires in 10 minutes; it doesn't
 
 If you have none of those browsers, the gear (Settings) has an advanced option to paste the session by hand.
 
+## 🖥️ Connect your own server (Navidrome / Subsonic)
+
+If you have a music server with the Subsonic API (**Navidrome**, Airsonic, Gonic…), Sound3DS can play and download from it (the **Server** card, Sound3DS 0.8 or newer).
+
+1. Click the blue **Connect server** button at the top.
+2. Type the server address (for example `http://192.168.1.10:4533`; if you paste the address of Navidrome's web page, `/app` is removed by itself), your user and password, and click **Connect**. Share checks them against the server.
+3. Scan the QR code from **Sound3DS → Settings → Receive from PC**.
+
+The console never gets your password, only the Subsonic token (`md5(password + salt)`), through a single-use link that expires in 10 minutes. If you type `localhost`, Share replaces it with your PC's IP so the console can reach it. To use the server away from home, connect the address you publish with **HTTPS** (a reverse proxy or a tunnel) or through a VPN; avoid exposing it over plain HTTP.
+
+## 🎵 Connect Bandcamp (experimental)
+
+The **Connect Bandcamp** button works like the SoundCloud one: Bandcamp's official sign-in page opens in a separate window, and the QR code takes the session to the console, where the Bandcamp card's middle tab becomes **Your collection**. Your password never goes through Share. **It's experimental**: in our tests the collection showed up empty, so it may not work for you. Without an account, Bandcamp in Sound3DS still works for searching and Discover.
+
 ---
 
 ## 💿 Albums, cover art and tags
@@ -125,7 +139,7 @@ Sound3DS sorts your local music by each song's **album tag**, not by folders. So
 
 Your songs on the PC are **not modified**. When they're sent, they get a new tag with what you see on screen and the cover art scaled down to 500 px, the size the console handles best. On the console they're saved as `Artist - Title.mp3`.
 
-You can send `.mp3` and `.aac` files, which are the formats Sound3DS plays.
+You can send `.mp3`, `.aac` and `.flac` files, which are the formats Sound3DS plays. **FLAC** keeps its own tags (Vorbis comments and cover art) instead of an ID3 tag, and FLAC above 48 kHz (hi-res 88.2/96/176.4/192 kHz) is **converted to 16-bit / 44.1 or 48 kHz** before sending: an Old 3DS can't decode 192 kHz in real time and the console outputs about 32.7 kHz anyway, so it sounds the same, weighs about 5 times less and uses less battery. Converted copies are cached, so sending them again is instant.
 
 ---
 
@@ -138,7 +152,7 @@ You can send `.mp3` and `.aac` files, which are the formats Sound3DS plays.
 - Songs that are already on the SD card are skipped.
 - It uses the same language you picked in Sound3DS (English or Spanish).
 
-The QR code can also be the URL of a single `.mp3`/`.aac`, or of a text list with one URL per line.
+The QR code can also be the URL of a single `.mp3`/`.aac`/`.flac`, or of a text list with one URL per line.
 
 ---
 
@@ -199,7 +213,7 @@ This project was built with AI assistance (Claude).
 ## 🙌 Credits
 
 - [quirc](https://github.com/dlbeer/quirc) (ISC) to read QR codes on the console.
-- [mutagen](https://github.com/quodlibet/mutagen), [Pillow](https://python-pillow.org), [python-qrcode](https://github.com/lincolnloop/python-qrcode) and [certifi](https://github.com/certifi/python-certifi) on the PC.
+- [mutagen](https://github.com/quodlibet/mutagen), [Pillow](https://python-pillow.org), [python-qrcode](https://github.com/lincolnloop/python-qrcode), [certifi](https://github.com/certifi/python-certifi), [NumPy](https://numpy.org), [soundfile](https://github.com/bastibe/python-soundfile) (libsndfile) and [soxr](https://github.com/dofuuz/python-soxr) on the PC.
 - [devkitPro](https://devkitpro.org) (libctru, citro2d, libcurl) for the console app.
 
 ## 📄 License

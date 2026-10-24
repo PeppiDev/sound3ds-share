@@ -1,5 +1,13 @@
 # Historial de cambios
 
+## [1.2.0] - 2026-10-24
+
+### Sound3DS Share (PC)
+- **Conectar servidor** (Navidrome, Airsonic, Gonic… con la API de Subsonic): se escribe la dirección, el usuario y la contraseña, Share los prueba contra el servidor y muestra un QR de un solo uso (vence en 10 minutos). La consola recibe la dirección, el usuario y el token de Subsonic (`md5(contraseña + sal)`), nunca la contraseña. `localhost` se cambia por la IP del PC y se quitan `/app` o `/rest` del final de la dirección. Los errores se explican: datos incompletos, sin conexión, usuario o contraseña rechazados, o un servidor que no es Subsonic.
+- **FLAC**: se pueden elegir y enviar `.flac`. Se leen sus etiquetas Vorbis y su carátula, y se envía una copia con las etiquetas y la carátula elegidas en la app (Sound3DS lee las etiquetas propias de FLAC, no ID3). Los FLAC de más de 48 kHz se convierten a FLAC de 16 bits a 44,1 o 48 kHz con soundfile (libsndfile) y soxr, con dither: en la 3DS suenan igual y pesan unas 5 veces menos. Las copias quedan en una carpeta temporal y se reutilizan; la consola espera mientras se prepara cada una.
+- **Conectar Bandcamp** (experimental): inicio de sesión en la página oficial de Bandcamp, como con SoundCloud, y un QR de un solo uso que lleva la sesión a la consola para la pestaña Tu colección. La sesión se valida con Bandcamp antes de mostrar el QR. En las pruebas la colección apareció vacía.
+- El ejecutable trae NumPy, soundfile y soxr (el de Linux pasa de unos 15 MB a 34 MB).
+
 ## [1.1.0] - 2026-10-19
 
 ### Sound3DS Share (PC)

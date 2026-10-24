@@ -11,7 +11,7 @@ Son dos programas que trabajan juntos:
 | | Dónde corre | Qué hace |
 |---|---|---|
 | **Sound3DS Share** | PC (Linux o Windows) | Explora tus archivos, arma la lista por álbum y genera el QR |
-| **[Sound3DS](https://github.com/PeppiDev/sound3ds)** 0.7 o más nueva | 3DS / 2DS / New 3DS | En **Configuración → Recibir desde el PC** escanea el QR con la cámara y descarga las canciones a `sdmc:/music` (o conecta tu cuenta de SoundCloud) |
+| **[Sound3DS](https://github.com/PeppiDev/sound3ds)** 0.7 o más nueva | 3DS / 2DS / New 3DS | En **Configuración → Recibir desde el PC** escanea el QR con la cámara y descarga las canciones a `sdmc:/music` (o conecta tu cuenta de SoundCloud, tu servidor propio o Bandcamp) |
 | **Sound3DS QR** (opcional) | 3DS / 2DS / New 3DS | La app aparte de antes, que hace lo mismo; ya no hace falta con Sound3DS 0.7 |
 
 <p align="center">
@@ -106,6 +106,20 @@ El QR lleva un enlace de **un solo uso** que vence en 10 minutos; no lleva tu se
 
 Si no tienes ninguno de esos navegadores, en el engranaje (Configuración) hay una opción avanzada para pegar la sesión a mano.
 
+## 🖥️ Conectar tu servidor propio (Navidrome / Subsonic)
+
+Si tienes un servidor de música con la API de Subsonic (**Navidrome**, Airsonic, Gonic…), Sound3DS puede escucharlo y descargar de él (la tarjeta **Servidor**, Sound3DS 0.8 o más nueva).
+
+1. Toca el botón azul **Conectar servidor** arriba.
+2. Escribe la dirección del servidor (por ejemplo `http://192.168.1.10:4533`; si pegas la dirección de la web de Navidrome, el `/app` se quita solo), tu usuario y contraseña, y toca **Conectar**. Share los prueba contra el servidor.
+3. Escanea el QR desde **Sound3DS → Configuración → Recibir desde el PC**.
+
+La consola nunca recibe tu contraseña, solo el token de Subsonic (`md5(contraseña + sal)`), por un enlace de un solo uso que vence en 10 minutos. Si escribes `localhost`, Share lo cambia por la IP del PC para que la consola llegue. Para usar el servidor fuera de casa, conecta la dirección que publiques con **HTTPS** (un proxy inverso o un túnel) o por una VPN; evita exponerlo por HTTP sin cifrar.
+
+## 🎵 Conectar Bandcamp (experimental)
+
+El botón **Conectar Bandcamp** funciona como el de SoundCloud: se abre la página oficial de inicio de sesión de Bandcamp en una ventana aparte y el QR lleva la sesión a la consola, donde la pestaña del medio de la tarjeta Bandcamp pasa a ser **Tu colección**. Tu contraseña nunca pasa por Share. **Es experimental**: en nuestras pruebas la colección apareció vacía, así que puede no funcionarte. Sin cuenta, Bandcamp en Sound3DS igual sirve para buscar y para Descubrir.
+
 ---
 
 ## 💿 Álbumes, carátulas y etiquetas
@@ -125,7 +139,7 @@ Sound3DS ordena tu música local por la **etiqueta de álbum** de cada canción,
 
 Las canciones del PC **no se modifican**. Al enviarlas se les pone una etiqueta nueva con lo que ves en pantalla y la carátula reducida a 500 px, el tamaño que mejor maneja la consola. En la consola se guardan como `Artista - Título.mp3`.
 
-Se pueden enviar archivos `.mp3` y `.aac`, que son los que reproduce Sound3DS.
+Se pueden enviar archivos `.mp3`, `.aac` y `.flac`, que son los que reproduce Sound3DS. Los **FLAC** conservan sus propias etiquetas (comentarios Vorbis y carátula) en lugar de una ID3, y los de más de 48 kHz (hi-res de 88,2/96/176,4/192 kHz) se **convierten a 16-bit / 44,1 o 48 kHz** antes de enviarlos: una Old 3DS no alcanza a decodificar 192 kHz en tiempo real y la consola sale a unos 32,7 kHz de todos modos, así que suenan igual, pesan unas 5 veces menos y gastan menos batería. Las copias convertidas se guardan, así que reenviarlas es instantáneo.
 
 ---
 
@@ -138,7 +152,7 @@ Se pueden enviar archivos `.mp3` y `.aac`, que son los que reproduce Sound3DS.
 - Las canciones que ya estaban en la SD se saltan.
 - Usa el mismo idioma que elegiste en Sound3DS (inglés o español).
 
-El QR también puede ser directamente la URL de un `.mp3`/`.aac`, o la de una lista de texto con una URL por línea.
+El QR también puede ser directamente la URL de un `.mp3`/`.aac`/`.flac`, o la de una lista de texto con una URL por línea.
 
 ---
 
@@ -199,7 +213,7 @@ Este proyecto se hizo con ayuda de IA (Claude).
 ## 🙌 Créditos
 
 - [quirc](https://github.com/dlbeer/quirc) (ISC) para leer los códigos QR en la consola.
-- [mutagen](https://github.com/quodlibet/mutagen), [Pillow](https://python-pillow.org), [python-qrcode](https://github.com/lincolnloop/python-qrcode) y [certifi](https://github.com/certifi/python-certifi) en el PC.
+- [mutagen](https://github.com/quodlibet/mutagen), [Pillow](https://python-pillow.org), [python-qrcode](https://github.com/lincolnloop/python-qrcode), [certifi](https://github.com/certifi/python-certifi), [NumPy](https://numpy.org), [soundfile](https://github.com/bastibe/python-soundfile) (libsndfile) y [soxr](https://github.com/dofuuz/python-soxr) en el PC.
 - [devkitPro](https://devkitpro.org) (libctru, citro2d, libcurl) para la app de la consola.
 
 ## 📄 Licencia
