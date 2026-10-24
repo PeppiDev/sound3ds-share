@@ -2,3 +2,6 @@ mutagen>=1.45
 qrcode>=7.4
 pillow>=9.0
 certifi>=2023.7
+numpy>=1.24
+soundfile>=0.12
+soxr>=0.3

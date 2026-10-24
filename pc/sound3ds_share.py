@@ -11,7 +11,8 @@ Dos servidores HTTP:
 
 Las canciones no se copian: al enviarlas se les antepone una etiqueta ID3v2.3
 nueva (título, artista, álbum, pista y carátula reducida a 500 px) y se manda
-el audio original a continuación.
+el audio original a continuación. Los FLAC son la excepción (ver flac_prep.py):
+se envía una copia con etiquetas FLAC, convertida si pasa de 48 kHz.
 """
 import hashlib
 import io
@@ -29,7 +30,9 @@ import urllib.parse
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+from mutagen.flac import FLAC
 from mutagen.id3 import APIC, ID3, TALB, TIT2, TPE1, TPE2, TRCK
+import flac_prep
 from sc_account import ACCOUNT
 from subsonic_link import SERVER
 import qrcode
@@ -45,7 +48,8 @@ APP_NAME = "Sound3DS Share"
 VERSION = "1.1.0"
 UI_PORT = 8764
 SHARE_PORT = 8765
-AUDIO_EXT = (".mp3", ".aac")
+AUDIO_EXT = (".mp3", ".aac", ".flac")
+FLAC_WAIT = 600          # segundos que la consola espera a que un FLAC quede listo
 IMAGE_EXT = (".jpg", ".jpeg", ".png")
 FOLDER_COVERS = ("cover", "folder", "front", "album", "albumart", "albumartsmall", "portada")
 COVER_MAX = 500
@@ -125,11 +129,29 @@ def read_meta(path):
     cover = None
     cover_src = ""
     tags = None
-    try:
-        tags = ID3(path)
-    except Exception:
-        tags = None
-    if tags is not None:
+    if not path.lower().endswith(".flac"):
+        try:
+            tags = ID3(path)
+        except Exception:
+            tags = None
+    if path.lower().endswith(".flac"):
+        try:
+            fl = FLAC(path)
+        except Exception:
+            fl = None
+        if fl is not None:
+            def v(key):
+                vals = fl.get(key) or []
+                return str(vals[0]).strip() if vals else ""
+            title, artist, album = v("title"), v("artist"), v("album")
+            album_artist = v("albumartist") or v("album artist")
+            track = _num(v("tracknumber"))
+            pics = fl.pictures
+            pic = next((p for p in pics if p.type == 3), pics[0] if pics else None)
+            if pic is not None:
+                cover = add_cover(pic.data)
+                cover_src = "embedded" if cover else ""
+    elif tags is not None:
         def t(key):
             fr = tags.get(key)
             return str(fr.text[0]).strip() if fr is not None and fr.text else ""
@@ -385,17 +407,37 @@ class Share:
             used.add(name.lower())
             with COVERS_LOCK:
                 cover = COVERS.get(s.get("cover") or "")
-            tag = build_tag(s, cover)
-            start, end = audio_range(path)
-            items.append({
-                "id": len(items), "name": name, "path": path, "tag": tag,
-                "start": start, "end": end, "size": len(tag) + end - start,
-                "sent": 0, "state": "pending", "title": s.get("title", ""), "album": s.get("album", ""),
-            })
+            item = {"id": len(items), "name": name, "path": path, "sent": 0, "state": "pending",
+                    "title": s.get("title", ""), "album": s.get("album", "")}
+            if ext == ".flac":
+                # Se prepara en segundo plano; el tamaño es el del original hasta que esté lista
+                item.update(tag=b"", start=0, end=os.path.getsize(path), ready=threading.Event(),
+                            song=dict(s), cover=cover, prep_error="")
+            else:
+                tag = build_tag(s, cover)
+                start, end = audio_range(path)
+                item.update(tag=tag, start=start, end=end)
+            item["size"] = len(item["tag"]) + item["end"] - item["start"]
+            items.append(item)
         with self.lock:
             self.items = items
             self.list_reads = 0
+        flacs = [it for it in items if "ready" in it]
+        if flacs:
+            threading.Thread(target=self._prepare_flacs, args=(flacs,), daemon=True).start()
         return items
+
+    def _prepare_flacs(self, flacs):
+        # De a uno, en el orden en que la consola los descarga
+        for it in flacs:
+            try:
+                out = flac_prep.prepare(it["path"], it["song"], it["cover"])
+                it["path"], it["end"] = out, os.path.getsize(out)
+                it["size"] = it["end"]
+            except Exception as e:
+                it["prep_error"] = str(e) or "error"
+                print(f"No se pudo preparar el FLAC {it['name']}: {e}", flush=True)
+            it["ready"].set()
 
     def listing(self):
         base = f"http://{self.ip}:{self.port}"
@@ -447,7 +489,14 @@ class ConsoleHandler(BaseHTTPRequestHandler):
         if not item:
             self.send_error(404)
             return
-        mime = "audio/mpeg" if item["name"].lower().endswith(".mp3") else "audio/aac"
+        if "ready" in item:
+            item["state"] = "preparing"
+            if not item["ready"].wait(FLAC_WAIT) or item["prep_error"]:
+                item["state"] = "error"
+                self.send_error(500)
+                return
+        name = item["name"].lower()
+        mime = "audio/mpeg" if name.endswith(".mp3") else "audio/flac" if name.endswith(".flac") else "audio/aac"
         self.send_response(200)
         self.send_header("Content-Type", mime)
         self.send_header("Content-Length", str(item["size"]))

@@ -297,7 +297,7 @@ const I18N = {
     add: "Agregar", toSend: "Para enviar", clear: "Vaciar", makeQr: "Generar QR", quit: "Cerrar",
     home: "Inicio", music: "Música", downloads: "Descargas", desktop: "Escritorio", root: "Sistema",
     addFolder: "+ carpeta", selected: n => `${n} seleccionada${n == 1 ? "" : "s"}`,
-    noAudio: "No hay canciones .mp3 ni .aac en esta carpeta", readError: "No se puede abrir esta carpeta",
+    noAudio: "No hay canciones .mp3, .aac ni .flac en esta carpeta", readError: "No se puede abrir esta carpeta",
     emptyTitle: "Elige canciones a la izquierda",
     emptyText: "Se agrupan por álbum con su carátula y etiquetas.<br>Puedes corregir lo que falte antes de generar el QR.",
     songs: n => `${n} canción${n == 1 ? "" : "es"}`, album: "Álbum", albumArtist: "Artista del álbum",
@@ -359,7 +359,7 @@ const I18N = {
     add: "Add", toSend: "To send", clear: "Clear", makeQr: "Generate QR", quit: "Close",
     home: "Home", music: "Music", downloads: "Downloads", desktop: "Desktop", root: "System",
     addFolder: "+ folder", selected: n => `${n} selected`,
-    noAudio: "No .mp3 or .aac songs in this folder", readError: "Can't open this folder",
+    noAudio: "No .mp3, .aac or .flac songs in this folder", readError: "Can't open this folder",
     emptyTitle: "Pick songs on the left",
     emptyText: "They're grouped by album with their cover and tags.<br>You can fix anything missing before generating the QR.",
     songs: n => `${n} song${n == 1 ? "" : "s"}`, album: "Album", albumArtist: "Album artist",
@@ -759,7 +759,7 @@ function renderProgress() {
   $("#progList").innerHTML = items.map(i => {
     const pct = i.size ? Math.min(100, Math.round(i.sent * 100 / i.size)) : 0;
     const icon = i.state === "done" ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>'
-      : i.state === "sending" ? '<span class="spin"></span>'
+      : i.state === "sending" || i.state === "preparing" ? '<span class="spin"></span>'
       : i.state === "error" ? '<svg width="16" height="16" viewBox="0 0 24 24" stroke="var(--err)" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>'
       : '<svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="var(--faint)"/></svg>';
     return `<div class="prog ${i.state}">${icon}<span class="n">${esc(i.name)}</span><span class="pct">${i.state === "pending" ? "" : pct + "%"}</span>
