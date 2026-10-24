@@ -205,7 +205,25 @@ def _kill_by_profile(profile):
 
 
 class Account:
-    """Estado de la conexión: idle → waiting (inicio de sesión) → ready (QR) → delivered."""
+    """Estado de la conexión: idle → waiting (inicio de sesión) → ready (QR) → delivered.
+
+    Las subclases cambian la página de inicio de sesión, qué cookies se leen
+    (pick_cookies) y cómo se valida la cuenta (_finish)."""
+
+    SIGNIN_URL = SIGNIN_URL
+    PROFILE_PREFIX = "sound3ds-sc-"
+
+    def pick_cookies(self, cookies):
+        """(token, extra) de las cookies del navegador; token None mientras no inicie sesión."""
+        token = refresh = None
+        for c in cookies:
+            if "soundcloud.com" not in c.get("domain", ""):
+                continue
+            if c.get("name") == "oauth_token":
+                token = c.get("value")
+            elif c.get("name") == "oauth_refresh_token":
+                refresh = c.get("value")
+        return token, refresh
 
     def __init__(self):
         self.lock = threading.Lock()
@@ -244,7 +262,7 @@ class Account:
                 return False
             self.state = "waiting"
             self.keep_profile = keep_profile
-            self.profile = profile or tempfile.mkdtemp(prefix="sound3ds-sc-")
+            self.profile = profile or tempfile.mkdtemp(prefix=self.PROFILE_PREFIX)
             port = free_port()
             kw = {"stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL}
             if os.name == "nt":
@@ -255,7 +273,7 @@ class Account:
                 self.proc = subprocess.Popen([browser, f"--user-data-dir={self.profile}",
                                               f"--remote-debugging-port={port}", "--no-first-run",
                                               "--no-default-browser-check", "--window-size=1000,800",
-                                              SIGNIN_URL], **kw)
+                                              self.SIGNIN_URL], **kw)
             except OSError:
                 self.state, self.error = "error", "no_browser"
                 return False
@@ -285,13 +303,7 @@ class Account:
             seen_token_at = 0.0
             while time.time() < deadline and not self.cancel_ev.is_set():
                 cookies = cdp.call("Storage.getCookies").get("cookies", [])
-                for c in cookies:
-                    if "soundcloud.com" not in c.get("domain", ""):
-                        continue
-                    if c.get("name") == "oauth_token":
-                        token = c.get("value")
-                    elif c.get("name") == "oauth_refresh_token":
-                        refresh = c.get("value")
+                token, refresh = self.pick_cookies(cookies)
                 if token and not seen_token_at:
                     seen_token_at = time.time()
                 # Con los dos, o con el token y unos segundos sin que llegue el de renovación

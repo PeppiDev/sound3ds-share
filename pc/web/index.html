@@ -159,6 +159,8 @@ button.badge:hover { filter: brightness(1.25); }
 .scbtn.connected { background: rgba(80,214,128,.12); color: var(--ok); border-color: rgba(80,214,128,.4); }
 .srvbtn { background: rgba(52,152,219,.14); color: #7cc0ef; border-color: rgba(52,152,219,.45); }
 .srvbtn:hover { background: rgba(52,152,219,.24); }
+.bcbtn { background: rgba(98,154,169,.16); color: #8fc4d2; border-color: rgba(98,154,169,.5); }
+.bcbtn:hover { background: rgba(98,154,169,.28); }
 .field input[type=password], .field input.plain { font-family: inherit; font-size: 13px; }
 .sheet.narrow { grid-template-columns: 1fr; width: min(540px, 94vw); }
 .sheet.narrow .steps { padding: 26px 28px; }
@@ -187,6 +189,7 @@ details.adv[open] summary { color: var(--text); margin-bottom: 10px; }
   </div>
   <div class="spacer"></div>
   <button class="scbtn srvbtn" id="srvBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="5" rx="1.5"/><rect x="3" y="9.5" width="18" height="5" rx="1.5"/><rect x="3" y="16" width="18" height="5" rx="1.5"/></svg><span id="srvBtnText"></span></button>
+  <button class="scbtn bcbtn" id="bcBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2 18 8.5 6H22l-6.5 12z"/></svg><span id="bcBtnText"></span></button>
   <button class="scbtn" id="scBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 10a5.5 5.5 0 0 0-10.6-2A4.5 4.5 0 0 0 7.5 17h10a3.5 3.5 0 0 0 0-7z"/></svg><span id="scBtnText"></span></button>
   <div class="service" id="service">
     <span class="dot"></span>
@@ -262,6 +265,11 @@ details.adv[open] summary { color: var(--text); margin-bottom: 10px; }
 <div class="modal" id="scModal">
   <div class="sheet narrow">
     <div class="steps" id="scBody"></div>
+  </div>
+</div>
+<div class="modal" id="bcModal">
+  <div class="sheet narrow">
+    <div class="steps" id="bcBody"></div>
   </div>
 </div>
 <div class="modal" id="srvModal">
@@ -350,6 +358,13 @@ const I18N = {
              invalid: "SoundCloud no aceptó la sesión. Vuelve a intentarlo.", expired: "El código venció sin que la consola lo escaneara.",
              browser: "No se pudo controlar la ventana del navegador.", port: "No se pudo abrir el puerto para la consola." },
     advanced: "Opciones avanzadas",
+    bcConnect: "Conectar Bandcamp", bcConnected: n => `Bandcamp: ${n}`,
+    bcTitle: "Conectar tu cuenta de Bandcamp",
+    bcIntro: "Sound3DS podrá mostrar tu colección (lo que compraste o descargaste en Bandcamp) y escucharla completa. Inicias sesión en la página oficial de Bandcamp: tu contraseña nunca pasa por esta app.",
+    bcWarn: "Sound3DS guardará tu sesión de Bandcamp en la tarjeta SD. Cualquiera que copie la SD podría entrar a tu cuenta. No compartas la tarjeta y usa Desconectar en Configuración si vas a prestarla o venderla.",
+    bcWaiting: "Inicia sesión en la ventana de Bandcamp que se abrió. Esta ventana sigue sola cuando entres.",
+    bcDeliveredHint: "Ya puedes cerrar esto. Tu colección aparece en la pestaña Colección de Bandcamp.",
+    bcErr: { closed: "Se cerró la ventana de Bandcamp antes de iniciar sesión.", invalid: "Bandcamp no aceptó la sesión. Vuelve a intentarlo." },
     manualWarn: "Usa esto solo si no tienes Edge, Chrome, Chromium o Brave instalado.",
     manualHow: "En soundcloud.com, con la sesión iniciada, abre las herramientas de desarrollador del navegador → Almacenamiento → Cookies y copia <b>oauth_token</b> y <b>oauth_refresh_token</b>. Sin el segundo, la consola no podrá renovar la sesión y habrá que reconectar cada día.",
     manualConnect: "Conectar con estos datos",
@@ -412,6 +427,13 @@ const I18N = {
              invalid: "SoundCloud didn't accept the session. Try again.", expired: "The code expired before the console scanned it.",
              browser: "Couldn't control the browser window.", port: "Couldn't open the port for the console." },
     advanced: "Advanced options",
+    bcConnect: "Connect Bandcamp", bcConnected: n => `Bandcamp: ${n}`,
+    bcTitle: "Connect your Bandcamp account",
+    bcIntro: "Sound3DS will be able to show your collection (what you bought or downloaded on Bandcamp) and play it in full. You sign in on Bandcamp's official page: your password never goes through this app.",
+    bcWarn: "Sound3DS will store your Bandcamp session on the SD card. Anyone who copies the SD card could get into your account. Don't share the card, and use Disconnect in Settings before lending or selling it.",
+    bcWaiting: "Sign in on the Bandcamp window that just opened. This screen moves on by itself once you're in.",
+    bcDeliveredHint: "You can close this. Your collection shows up in Bandcamp's Collection tab.",
+    bcErr: { closed: "The Bandcamp window was closed before signing in.", invalid: "Bandcamp didn't accept the session. Try again." },
     manualWarn: "Use this only if you don't have Edge, Chrome, Chromium or Brave installed.",
     manualHow: "On soundcloud.com, signed in, open the browser's developer tools → Storage → Cookies and copy <b>oauth_token</b> and <b>oauth_refresh_token</b>. Without the second one the console can't renew the session and you'll need to reconnect every day.",
     manualConnect: "Connect with these values",
@@ -771,7 +793,7 @@ function renderProgress() {
 $("#langBtn").onclick = () => {
   lang = lang === "es" ? "en" : "es";
   localStorage.setItem("lang", lang);
-  applyI18n(); renderFiles(); renderAlbums(); poll(); scPoll(); srvPoll();
+  applyI18n(); renderFiles(); renderAlbums(); poll(); scPoll(); srvPoll(); bcPoll();
   if ($("#scModal").classList.contains("show")) scRender();
   loadPlaces();
 };
@@ -835,6 +857,54 @@ $("#scBody").addEventListener("click", async e => {
   if (a === "start") { scStep = "flow"; sc = await post("/api/sc/connect", {}); scRender(); }
   else if (a === "cancel") { sc = await post("/api/sc/cancel", {}); scStep = "intro"; $("#scModal").classList.remove("show"); }
   else if (a === "close") { $("#scModal").classList.remove("show"); clearInterval(scTimer); scTimer = setInterval(scPoll, 5000); }
+});
+// ---------------------------------------------------------------- Cuenta de Bandcamp
+let bc = { state: "idle" }, bcStep = "intro", bcTimer = null;
+const ICON_BC = '<svg width="32" height="32" viewBox="0 0 24 24" fill="#629aa9"><path d="M2 18 8.5 6H22l-6.5 12z"/></svg>';
+function bcRender() {
+  const b = $("#bcBody");
+  const errText = c => (I18N[lang].bcErr[c] || I18N[lang].scErr[c] || c);
+  if (bcStep === "intro") {
+    b.innerHTML = `<h2>${ICON_BC} ${t("bcTitle")}</h2><p class="hint" style="font-size:13px">${t("bcIntro")}</p>
+      <div class="warnbox">${t("bcWarn")}</div>
+      <div class="sheet-foot"><button class="btn" data-bc="close">${t("cancel")}</button><button class="btn primary" data-bc="start">${t("continue")}</button></div>`;
+  } else if (bc.state === "waiting") {
+    b.innerHTML = `<h2>${ICON_BC} ${t("bcTitle")}</h2><div style="display:flex;gap:16px;align-items:center"><div class="bigspin"></div>
+      <div>${t("bcWaiting")}</div></div><div class="sheet-foot"><button class="btn" data-bc="cancel">${t("cancel")}</button></div>`;
+  } else if (bc.state === "ready") {
+    b.innerHTML = `<h2>${ICON_BC} ${t("scReady", esc(bc.username))}</h2><div class="sc-qr"><div class="qrbox">${bc.svg || ""}</div>
+      <div><p>${t("scScan")}</p><div class="status"><span class="pulse"></span><span>${t("waiting")}</span></div>
+      <p class="hint">${t("scExpires", Math.ceil(bc.expires_in / 60))}</p></div></div>
+      <div class="hint">${t("sameWifi")}</div><div class="sheet-foot"><button class="btn" data-bc="cancel">${t("cancel")}</button></div>`;
+  } else if (bc.state === "delivered") {
+    b.innerHTML = `<h2>${ICON_BC} ${t("done")}</h2><div class="status ok"><span class="pulse"></span><span>${t("scDelivered", esc(bc.username))}</span></div>
+      <p class="hint">${t("bcDeliveredHint")}</p><div class="sheet-foot"><button class="btn primary" data-bc="close">${t("close")}</button></div>`;
+  } else if (bc.state === "error") {
+    b.innerHTML = `<h2>${ICON_BC} ${t("bcTitle")}</h2><div class="warnbox">${errText(bc.error)}</div>
+      <div class="sheet-foot"><button class="btn" data-bc="close">${t("close")}</button><button class="btn primary" data-bc="start">${t("retry")}</button></div>`;
+  } else {
+    bcStep = "intro";
+    return bcRender();
+  }
+}
+async function bcPoll() {
+  try { bc = await api("/api/bc/state"); } catch { return; }
+  $("#bcBtn").classList.toggle("connected", bc.state === "delivered");
+  $("#bcBtnText").textContent = bc.state === "delivered" ? t("bcConnected", bc.username) : t("bcConnect");
+  if ($("#bcModal").classList.contains("show") && bcStep !== "intro") bcRender();
+}
+$("#bcBtn").onclick = () => {
+  bcStep = bc.state === "idle" || bc.state === "error" ? "intro" : "flow";
+  $("#bcModal").classList.add("show");
+  bcRender();
+  clearInterval(bcTimer);
+  bcTimer = setInterval(bcPoll, 1000);
+};
+$("#bcBody").addEventListener("click", async e => {
+  const a = e.target.closest("[data-bc]")?.dataset.bc;
+  if (a === "start") { bcStep = "flow"; bc = await post("/api/bc/connect", {}); bcRender(); }
+  else if (a === "cancel") { bc = await post("/api/bc/cancel", {}); bcStep = "intro"; $("#bcModal").classList.remove("show"); }
+  else if (a === "close") { $("#bcModal").classList.remove("show"); clearInterval(bcTimer); bcTimer = setInterval(bcPoll, 5000); }
 });
 // ---------------------------------------------------------------- Servidor propio (Subsonic)
 let srv = { state: "idle" }, srvBusy = false, srvTimer = null, srvForm = { url: "", user: "" };
@@ -912,6 +982,8 @@ $("#manBtn").onclick = async () => {
   applyI18n();
   scPoll();
   scTimer = setInterval(scPoll, 5000);
+  bcPoll();
+  bcTimer = setInterval(bcPoll, 5000);
   srvPoll();
   srvTimer = setInterval(srvPoll, 5000);
   const start = await loadPlaces();

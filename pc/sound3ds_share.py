@@ -34,6 +34,7 @@ from mutagen.flac import FLAC
 from mutagen.id3 import APIC, ID3, TALB, TIT2, TPE1, TPE2, TRCK
 import flac_prep
 from sc_account import ACCOUNT
+from bc_account import BC_ACCOUNT
 from subsonic_link import SERVER
 import qrcode
 import qrcode.image.svg
@@ -457,9 +458,9 @@ class ConsoleHandler(BaseHTTPRequestHandler):
         path = urllib.parse.urlsplit(self.path).path
         SHARE.last_activity = time.time()
         # Cuenta de SoundCloud o servidor propio: el enlace del QR responde una sola vez
-        m = re.match(r"^/(account|server)/([A-Za-z0-9_-]{16,64})$", path)
+        m = re.match(r"^/(account|server|bandcamp)/([A-Za-z0-9_-]{16,64})$", path)
         if m:
-            body = (ACCOUNT if m.group(1) == "account" else SERVER).take(m.group(2))
+            body = {"account": ACCOUNT, "server": SERVER, "bandcamp": BC_ACCOUNT}[m.group(1)].take(m.group(2))
             if body is None:
                 self.send_error(404)
                 return
@@ -616,13 +617,14 @@ class UIHandler(BaseHTTPRequestHandler):
                 st["svg"] = qr_svg(f"http://{SHARE.ip}:{SHARE.port}/server/{st['code']}")
             st.pop("code", None)
             self._json(st)
-        elif u.path == "/api/sc/state":
-            st = ACCOUNT.status()
+        elif u.path in ("/api/sc/state", "/api/bc/state"):
+            bc = u.path == "/api/bc/state"
+            st = (BC_ACCOUNT if bc else ACCOUNT).status()
             if st["state"] == "ready":
                 # El QR apunta al servicio de la red local: se enciende si estaba apagado
                 if not SHARE.start():
                     st["error"] = "port"
-                link = f"http://{SHARE.ip}:{SHARE.port}/account/{st['code']}"
+                link = f"http://{SHARE.ip}:{SHARE.port}/{'bandcamp' if bc else 'account'}/{st['code']}"
                 st["svg"] = qr_svg(link)
             st.pop("code", None)
             self._json(st)
@@ -677,6 +679,12 @@ class UIHandler(BaseHTTPRequestHandler):
         elif u.path == "/api/sc/cancel":
             ACCOUNT.cancel()
             self._json(ACCOUNT.status() | {"code": None})
+        elif u.path == "/api/bc/connect":
+            BC_ACCOUNT.start()
+            self._json(BC_ACCOUNT.status() | {"code": None})
+        elif u.path == "/api/bc/cancel":
+            BC_ACCOUNT.cancel()
+            self._json(BC_ACCOUNT.status() | {"code": None})
         elif u.path == "/api/bye":
             App.bye_at = time.time() + 5   # se cierra salvo que la página vuelva (recarga)
             self._json({})
@@ -749,6 +757,7 @@ def main():
         if App.seen_ui and now - App.last_ping > 180 and not busy:
             break
     ACCOUNT.cancel()
+    BC_ACCOUNT.cancel()
     SHARE.stop()
     ui.shutdown()
 
