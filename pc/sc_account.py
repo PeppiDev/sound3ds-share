@@ -11,6 +11,7 @@ enlace, nunca el token).
 import base64
 import json
 import os
+import re
 import secrets
 import shutil
 import socket
@@ -23,7 +24,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-API_CLIENT_ID = "A0cxVCVBD6HAZsm0P3nxKaPaZtrGqkXN"   # el mismo que usa Sound3DS
+# client_id público de la web de SoundCloud. SoundCloud lo cambia cada cierto tiempo
+# (el viejo responde 401): se usa este de partida y, si falla, se busca el actual
+# igual que Sound3DS, en los scripts de soundcloud.com.
+API_CLIENT_ID = "qLcgHhXgeEFFaSolTB9I71LBsqncsD93"
+_CID_RE = re.compile(r'client_id[:=]"([A-Za-z0-9]{32})(?![A-Za-z0-9])')
 SIGNIN_URL = "https://soundcloud.com/signin"
 LOGIN_TIMEOUT = 600   # segundos para iniciar sesión
 CODE_TTL = 600        # segundos que vale el enlace para la consola
@@ -177,16 +182,45 @@ def ssl_context():
     return _SSL_CTX
 
 
-def api_me(token):
-    req = urllib.request.Request(f"https://api-v2.soundcloud.com/me?client_id={API_CLIENT_ID}",
-                                 headers={"Authorization": f"OAuth {token}", "User-Agent": UA,
-                                          "Accept": "application/json"})
-    try:
+def fetch_client_id():
+    """client_id actual de la web de SoundCloud, o None si no se encuentra."""
+    def get(url, limit):
+        req = urllib.request.Request(url, headers={"User-Agent": UA})
         with urllib.request.urlopen(req, timeout=20, context=ssl_context()) as r:
-            return json.loads(r.read())
+            return r.read(limit).decode("utf-8", "replace")
+    try:
+        page = get("https://soundcloud.com/", 1 << 20)
+        scripts = re.findall(r'src="(https://a-v2\.sndcdn\.com/assets/[^"]+\.js)"', page)
+        for url in reversed(scripts[-8:]):
+            m = _CID_RE.search(get(url, 64 * 1024))   # aparece al principio del script
+            if m:
+                return m.group(1)
     except (urllib.error.URLError, ValueError, OSError) as e:
-        print("SoundCloud /me:", type(e).__name__, getattr(e, "code", "") or getattr(e, "reason", ""), flush=True)
-        return None
+        print("SoundCloud client_id:", type(e).__name__, getattr(e, "reason", ""), flush=True)
+    return None
+
+
+def api_me(token):
+    global API_CLIENT_ID
+    for attempt in range(2):
+        req = urllib.request.Request(f"https://api-v2.soundcloud.com/me?client_id={API_CLIENT_ID}",
+                                     headers={"Authorization": f"OAuth {token}", "User-Agent": UA,
+                                              "Accept": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=20, context=ssl_context()) as r:
+                return json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            if e.code == 401 and attempt == 0:
+                fresh = fetch_client_id()
+                if fresh and fresh != API_CLIENT_ID:   # el client_id caducó: reintentar con el actual
+                    API_CLIENT_ID = fresh
+                    continue
+            print("SoundCloud /me: HTTPError", e.code, flush=True)
+            return None
+        except (urllib.error.URLError, ValueError, OSError) as e:
+            print("SoundCloud /me:", type(e).__name__, getattr(e, "reason", ""), flush=True)
+            return None
+    return None
 
 
 def _kill_by_profile(profile):

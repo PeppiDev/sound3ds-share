@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## [1.2.1] - 2026-11-14
+
+### Sound3DS Share (PC)
+- **Conectar SoundCloud** volvía a fallar porque SoundCloud cambió el `client_id` público de su web y el de Share quedó revocado (401 al validar la cuenta). Ahora parte con el actual y, si vuelve a cambiar, busca el nuevo en los scripts de soundcloud.com y reintenta.
+
 ## [1.2.0] - 2026-10-24
 
 ### Sound3DS Share (PC)
