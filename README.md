@@ -212,7 +212,29 @@ docs/               images for this README
 
 ## 🤖 AI usage
 
-This project was built with AI assistance (Claude).
+Yes, Sound3DS Share (like [Sound3DS](https://github.com/PeppiDev/sound3ds)) was developed with AI (Claude). I'm not hiding it, and here's how.
+
+It wasn't *vibe coding* (asking a chatbot for things and pasting whatever comes out). It was built with **spec-driven development** (SDD):
+
+1. **Spec first.** Every feature starts from a document: what it must do, why, its limits (the CPU and memory of an Old 3DS, a format, a service) and how we know it's done. I decide the design, the scope and what *won't* be done.
+2. **The AI implements against that spec**, in Python on the PC and in C with devkitPro on the console, the same tools any homebrew uses.
+3. **It gets verified.** First with automated tests in the emulator (Azahar), then on real consoles: Old 2DS, New 3DS XL and New 2DS XL. Nothing ships in a release without working on hardware.
+4. **The hardware has the final say.** Several decisions came from measuring on the console, not from theory: the headphone button was found by reading the codec registers on a 2DS, 192 kHz FLAC was dropped because an Old 2DS can't keep up decoding it, and a hang when seeking was found and fixed on the console.
+
+The AI writes most of the code; the decisions, the testing and the responsibility for what gets released are mine. If something breaks, open an issue: I'll be the one reading it.
+
+<details>
+<summary>If you only came here to check whether AI was used</summary>
+
+<br>
+
+Then this part is for you. If your review of this project started and ended in this section, you didn't review the project: you reviewed a word. If you dismiss an app, a homebrew or any code as soon as you read "AI", I'd invite you to rethink that criterion, because a criterion that fits in a Ctrl+F isn't a criterion, it's a filter. Judging a program by how it was written instead of by what it does is like judging a book by the typewriter it was typed on. You very likely already use software made partly with AI; the difference is that here you were told.
+
+The useful question isn't "was AI used?" but: does it work? Is it stable? Does it respect the people who use it? Is its code open for review? All of Sound3DS Share is in this repository. Read it, try it on your console and criticize it for what you find. That kind of criticism actually helps me. "AI slop", on the other hand, isn't criticism: it's the fastest way to have an opinion about something without ever opening it.
+
+The 3DS hasn't had official support for years. What keeps it alive is people making new things for it, with whatever tools they have. Commenting "AI slop" under someone else's work hasn't kept a single console alive yet. If you really care about homebrew quality, this repository takes issues and pull requests; they just take a bit more effort than a comment.
+
+</details>
 
 ## 🙌 Credits
 

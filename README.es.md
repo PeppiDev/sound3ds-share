@@ -212,7 +212,29 @@ docs/               imágenes de este README
 
 ## 🤖 Uso de IA
 
-Este proyecto se hizo con ayuda de IA (Claude).
+Sí, Sound3DS Share (igual que [Sound3DS](https://github.com/PeppiDev/sound3ds)) se desarrolló con IA (Claude). No lo escondo, y aquí está cómo.
+
+No fue *vibe coding* (pedirle cosas a un chat y pegar lo que salga). Se trabajó con **desarrollo guiado por especificaciones** (SDD, *spec-driven development*):
+
+1. **Primero la especificación.** Cada función parte de un documento: qué debe hacer, por qué, qué límites tiene (la CPU y la memoria de una Old 3DS, un formato, un servicio) y cómo se sabe que está terminada. El diseño, el alcance y lo que *no* se hace los decido yo.
+2. **La IA implementa contra esa especificación**, en Python en el PC y en C con devkitPro en la consola, las mismas herramientas que usa cualquier homebrew.
+3. **Se verifica.** Primero con pruebas automáticas en el emulador (Azahar) y después en consolas reales: Old 2DS, New 3DS XL y New 2DS XL. Nada sale en una versión sin funcionar en hardware.
+4. **Manda lo que dice el hardware.** Varias decisiones salieron de medir en la consola y no de la teoría: el botón de los audífonos se encontró leyendo los registros del códec en una 2DS, los FLAC de 192 kHz se descartaron porque una Old 2DS no alcanza a decodificarlos, y un cuelgue al adelantar se encontró y se corrigió en la consola.
+
+La IA escribe la mayor parte del código; las decisiones, las pruebas y la responsabilidad por lo que se publica son mías. Si algo falla, abre un issue: lo voy a leer yo.
+
+<details>
+<summary>Si llegaste hasta aquí solo para ver si se usó IA</summary>
+
+<br>
+
+Entonces esta parte es para ti. Si tu revisión de este proyecto empezó y terminó en esta sección, no revisaste el proyecto: revisaste una palabra. Si descartas una app, un homebrew o cualquier código apenas lees "IA", te invito a revisar ese criterio, porque un criterio que cabe en un Ctrl+F no es un criterio, es un filtro. Juzgar un programa por cómo se escribió y no por lo que hace es como juzgar un libro por la máquina de escribir con que se escribió. Es muy probable que ya uses software hecho en parte con IA; la diferencia es que aquí te lo dijeron.
+
+La pregunta útil no es "¿se usó IA?", sino: ¿funciona?, ¿es estable?, ¿respeta a quien lo usa?, ¿su código está abierto para revisarlo? Todo Sound3DS Share está en este repositorio. Léelo, pruébalo en tu consola y critícalo por lo que encuentres. Esa crítica sí me sirve. "AI slop", en cambio, no es una crítica: es la forma más rápida de opinar sobre algo sin haberlo abierto.
+
+La 3DS lleva años sin soporte oficial. Lo que la mantiene viva es gente haciéndole cosas nuevas, con las herramientas que tenga a mano. Comentar "AI slop" bajo el trabajo de otro todavía no ha mantenido viva ninguna consola. Si de verdad te importa la calidad del homebrew, el repositorio acepta issues y pull requests; eso sí, cuesta un poco más que un comentario.
+
+</details>
 
 ## 🙌 Créditos
 
