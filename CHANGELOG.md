@@ -1,9 +1,11 @@
 # Historial de cambios
 
-## [1.2.1] - 2026-11-14
+## [1.2.1] - 2026-11-15
 
 ### Sound3DS Share (PC)
+- **Radios por internet**: se pueden elegir y enviar playlists `.m3u`/`.m3u8` con direcciones `http(s)://` (las que solo traen rutas del PC se ignoran). Aparecen en el álbum **Radios** y se envían tal cual; Sound3DS 0.9.0 las guarda en `sdmc:/3ds/sound3ds/playlists/`.
 - **Conectar SoundCloud** volvía a fallar porque SoundCloud cambió el `client_id` público de su web y el de Share quedó revocado (401 al validar la cuenta). Ahora parte con el actual y, si vuelve a cambiar, busca el nuevo en los scripts de soundcloud.com y reintenta.
+- **Windows 7**: nuevo ejecutable `Sound3DS-Share-Win7.exe` (Python 3.8, 32 bits; script `pc/build_windows7.sh`). Para **Conectar SoundCloud** necesita Chrome 109, el último para Windows 7; sin él la interfaz se abre en el navegador predeterminado. La búsqueda de navegador también mira `Archivos de programa` de 64 bits desde un ejecutable de 32 bits.
 
 ## [1.2.0] - 2026-10-24
 

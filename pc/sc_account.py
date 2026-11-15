@@ -39,7 +39,7 @@ UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
 def browser_candidates():
     out = []
     if os.name == "nt":
-        for env in ("PROGRAMFILES(X86)", "PROGRAMFILES", "LOCALAPPDATA"):
+        for env in ("PROGRAMW6432", "PROGRAMFILES(X86)", "PROGRAMFILES", "LOCALAPPDATA"):
             base = os.environ.get(env)
             if base:
                 out += [os.path.join(base, "Microsoft", "Edge", "Application", "msedge.exe"),

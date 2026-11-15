@@ -45,6 +45,7 @@ Download the executable for your system from [Releases](https://github.com/Peppi
 | System | File | How to open it |
 |---|---|---|
 | **Windows 10 / 11** | `Sound3DS-Share.exe` | Double-click it. The first time, Windows asks about the firewall: check **Private networks** and click **Allow access**, otherwise the console won't be able to connect. If SmartScreen shows up ("Windows protected your PC"), click **More info → Run anyway**. |
+| **Windows 7 SP1** | `Sound3DS-Share-Win7.exe` | Same as above, built with Python 3.8 (32-bit, works on 32 and 64-bit Windows). Needs Windows 7 SP1 with the Universal C Runtime update (KB2999226). Windows 7 has no Edge: **Connect SoundCloud** needs Chrome 109 (the last version for Windows 7); without it the interface opens in your default browser. |
 | **Linux** | `Sound3DS-Share` | Make it executable (`chmod +x Sound3DS-Share` or Properties → Permissions → "Allow executing") and open it. Works on almost any recent distro: Ubuntu 20.04+, Debian 11+, Fedora, Arch, Mint, openSUSE, Pop!_OS... |
 
 Nothing else to install. The interface opens as its own window if you have Edge, Chrome, Chromium or Brave (Windows always ships Edge); otherwise it opens in your default browser.
@@ -77,6 +78,8 @@ EOF
 4. Click **Generate QR**.
 5. **On the console**, open **Sound3DS → Settings → Receive from PC** (or the Sound3DS QR app) and point the outer camera at the QR code, about 20 cm (8 in) away.
 6. The console downloads the songs and the PC shows the progress of each one. When it's done, open them in **Sound3DS > Local**.
+
+**Internet radio**: you can also send `.m3u` playlists with stream addresses (for example a station's `https://.../radio.mp3`). They show up in the **Radios** album; the console saves them to `sdmc:/3ds/sound3ds/playlists/` and they appear in Local right away (needs Sound3DS 0.9.0). Playlists that only point to songs on your PC are skipped, since those paths don't exist on the console.
 
 <p align="center">
   <img src="docs/share-qr.png" alt="Generated QR code and download progress on the PC" width="620">
@@ -183,6 +186,7 @@ Executables (require `podman`):
 ```bash
 ./pc/build_linux.sh     # pc/dist/linux/Sound3DS-Share (built on Debian 11, glibc 2.31)
 ./pc/build_windows.sh   # pc/dist/windows/Sound3DS-Share.exe (Windows Python under Wine)
+./pc/build_windows7.sh  # pc/dist/windows7/Sound3DS-Share-Win7.exe (Python 3.8, for Windows 7)
 ```
 
 ### Console

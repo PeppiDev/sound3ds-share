@@ -50,6 +50,24 @@ VERSION = "1.2.1"
 UI_PORT = 8764
 SHARE_PORT = 8765
 AUDIO_EXT = (".mp3", ".aac", ".flac")
+PLAYLIST_EXT = (".m3u", ".m3u8")   # radios por internet: la consola las guarda en sus playlists
+
+
+def is_radio_playlist(path):
+    """Solo se envían las .m3u con direcciones http: las rutas del PC no sirven en la consola."""
+    if not path.lower().endswith(PLAYLIST_EXT):
+        return False
+    try:
+        if os.path.getsize(path) > 256 * 1024:
+            return False
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            return any(l.strip().lower().startswith(("http://", "https://")) for l in f)
+    except OSError:
+        return False
+
+
+def is_sendable(path):
+    return path.lower().endswith(AUDIO_EXT) or is_radio_playlist(path)
 FLAC_WAIT = 600          # segundos que la consola espera a que un FLAC quede listo
 IMAGE_EXT = (".jpg", ".jpeg", ".png")
 FOLDER_COVERS = ("cover", "folder", "front", "album", "albumart", "albumartsmall", "portada")
@@ -125,6 +143,12 @@ def _num(s):
 
 
 def read_meta(path):
+    if path.lower().endswith(PLAYLIST_EXT):
+        return {
+            "path": path, "size": os.path.getsize(path), "ext": os.path.splitext(path)[1].lower(),
+            "title": os.path.splitext(os.path.basename(path))[0], "artist": "", "album": "Radios",
+            "album_artist": "", "track": 0, "cover": None, "cover_src": "", "playlist": True,
+        }
     title = artist = album = album_artist = ""
     track = 0
     cover = None
@@ -293,7 +317,7 @@ def list_dir(path):
                 try:
                     if e.is_dir():
                         entries.append({"name": e.name, "path": e.path, "type": "dir"})
-                    elif e.name.lower().endswith(AUDIO_EXT):
+                    elif is_sendable(e.path):
                         entries.append({"name": e.name, "path": e.path, "type": "audio",
                                         "size": e.stat().st_size})
                 except OSError:
@@ -312,11 +336,11 @@ def expand(paths):
             for root, dirs, names in os.walk(p):
                 dirs[:] = sorted(d for d in dirs if not d.startswith("."))
                 for n in sorted(names):
-                    if n.lower().endswith(AUDIO_EXT):
+                    if is_sendable(os.path.join(root, n)):
                         files.append(os.path.join(root, n))
                         if len(files) >= MAX_SCAN:
                             return files
-        elif p.lower().endswith(AUDIO_EXT) and os.path.isfile(p):
+        elif os.path.isfile(p) and is_sendable(p):
             files.append(p)
     return files
 
@@ -399,7 +423,8 @@ class Share:
             if not os.path.isfile(path):
                 continue
             ext = os.path.splitext(path)[1].lower()
-            artist = s.get("artist") or s.get("album_artist") or ""
+            playlist = ext in PLAYLIST_EXT
+            artist = "" if playlist else (s.get("artist") or s.get("album_artist") or "")
             base = safe_name(f"{artist} - {s.get('title') or 'Pista'}" if artist else (s.get("title") or "Pista"))
             name, k = base + ext, 2
             while name.lower() in used:
@@ -410,7 +435,10 @@ class Share:
                 cover = COVERS.get(s.get("cover") or "")
             item = {"id": len(items), "name": name, "path": path, "sent": 0, "state": "pending",
                     "title": s.get("title", ""), "album": s.get("album", "")}
-            if ext == ".flac":
+            if playlist:
+                # Se copia tal cual a sdmc:/3ds/sound3ds/playlists/
+                item.update(tag=b"", start=0, end=os.path.getsize(path))
+            elif ext == ".flac":
                 # Se prepara en segundo plano; el tamaño es el del original hasta que esté lista
                 item.update(tag=b"", start=0, end=os.path.getsize(path), ready=threading.Event(),
                             song=dict(s), cover=cover, prep_error="")
@@ -497,7 +525,8 @@ class ConsoleHandler(BaseHTTPRequestHandler):
                 self.send_error(500)
                 return
         name = item["name"].lower()
-        mime = "audio/mpeg" if name.endswith(".mp3") else "audio/flac" if name.endswith(".flac") else "audio/aac"
+        mime = ("audio/mpeg" if name.endswith(".mp3") else "audio/flac" if name.endswith(".flac")
+                else "audio/x-mpegurl" if name.endswith(PLAYLIST_EXT) else "audio/aac")
         self.send_response(200)
         self.send_header("Content-Type", mime)
         self.send_header("Content-Length", str(item["size"]))
@@ -699,7 +728,7 @@ def open_window(url):
     """Abre la interfaz como ventana de app si hay un navegador Chromium; si no, en el predeterminado."""
     candidates = []
     if os.name == "nt":
-        for env in ("PROGRAMFILES(X86)", "PROGRAMFILES", "LOCALAPPDATA"):
+        for env in ("PROGRAMW6432", "PROGRAMFILES(X86)", "PROGRAMFILES", "LOCALAPPDATA"):
             base = os.environ.get(env)
             if base:
                 candidates += [os.path.join(base, "Microsoft", "Edge", "Application", "msedge.exe"),

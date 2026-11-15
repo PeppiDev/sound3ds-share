@@ -45,6 +45,7 @@ Baja el ejecutable de tu sistema desde [Releases](https://github.com/PeppiDev/so
 | Sistema | Archivo | Cómo abrirlo |
 |---|---|---|
 | **Windows 10 / 11** | `Sound3DS-Share.exe` | Doble clic. La primera vez Windows pregunta por el firewall: marca **Redes privadas** y toca **Permitir**, si no la consola no podrá conectarse. Si aparece SmartScreen ("Windows protegió su PC"), toca **Más información → Ejecutar de todas formas**. |
+| **Windows 7 SP1** | `Sound3DS-Share-Win7.exe` | Igual que el anterior, compilado con Python 3.8 (32 bits, sirve en Windows de 32 y de 64 bits). Necesita Windows 7 SP1 con la actualización del Universal C Runtime (KB2999226). Windows 7 no trae Edge: **Conectar SoundCloud** necesita Chrome 109 (la última versión para Windows 7); sin él la interfaz se abre en tu navegador predeterminado. |
 | **Linux** | `Sound3DS-Share` | Dale permiso de ejecución (`chmod +x Sound3DS-Share` o Propiedades → Permisos → "Permitir ejecutar") y ábrelo. Funciona en casi cualquier distro de los últimos años: Ubuntu 20.04+, Debian 11+, Fedora, Arch, Mint, openSUSE, Pop!_OS... |
 
 No hay que instalar nada más. La interfaz se abre como ventana propia si tienes Edge, Chrome, Chromium o Brave (Windows siempre trae Edge); si no, se abre en tu navegador predeterminado.
@@ -77,6 +78,8 @@ EOF
 4. Toca **Generar QR**.
 5. **En la consola**, abre **Sound3DS → Configuración → Recibir desde el PC** (o la app Sound3DS QR) y apunta la cámara de afuera al QR, a unos 20 cm.
 6. La consola descarga las canciones y el PC muestra el avance de cada una. Al terminar, ábrelas en **Sound3DS > Local**.
+
+**Radios por internet**: también puedes enviar playlists `.m3u` con direcciones de streams (por ejemplo el `https://.../radio.mp3` de una emisora). Aparecen en el álbum **Radios**; la consola las guarda en `sdmc:/3ds/sound3ds/playlists/` y aparecen en Local al instante (requiere Sound3DS 0.9.0). Las playlists que solo apuntan a canciones de tu PC se saltan, porque esas rutas no existen en la consola.
 
 <p align="center">
   <img src="docs/share-qr.png" alt="QR generado y avance de la descarga en el PC" width="620">
@@ -183,6 +186,7 @@ Ejecutables (requieren `podman`):
 ```bash
 ./pc/build_linux.sh     # pc/dist/linux/Sound3DS-Share (compilado sobre Debian 11, glibc 2.31)
 ./pc/build_windows.sh   # pc/dist/windows/Sound3DS-Share.exe (Python para Windows bajo Wine)
+./pc/build_windows7.sh  # pc/dist/windows7/Sound3DS-Share-Win7.exe (Python 3.8, para Windows 7)
 ```
 
 ### Consola
